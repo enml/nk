@@ -1,4 +1,0 @@
-User-agent: *
-Disallow: 
-
-Sitemap: http://nkcoder.github.io/sitemap.xml 
