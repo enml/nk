@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2013-12-28T08:41:41+08:00</updated>
+  <updated>2013-12-28T20:55:41+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -12,5 +12,18 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    
+    <title type="html"><![CDATA[title]]></title>
+    <link href="http://nkcoder.github.io/blog/2013/12/28/title/"/>
+    
+    <updated>2013-12-28T08:48:19+08:00</updated>
+    <id>http://nkcoder.github.io/blog/2013/12/28/title</id>
+    
+    <content type="html"><![CDATA[
+]]></content>
+    
+  </entry>
   
 </feed>
