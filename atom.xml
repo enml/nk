@@ -1,29 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[My Octopress Blog]]></title>
+  <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2013-12-28T20:55:41+08:00</updated>
+  <updated>2013-12-28T22:29:31+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
-    <name><![CDATA[Your Name]]></name>
+    <name><![CDATA[lingguo]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
   
   <entry>
-    
     <title type="html"><![CDATA[title]]></title>
     <link href="http://nkcoder.github.io/blog/2013/12/28/title/"/>
-    
     <updated>2013-12-28T08:48:19+08:00</updated>
     <id>http://nkcoder.github.io/blog/2013/12/28/title</id>
-    
     <content type="html"><![CDATA[
 ]]></content>
-    
   </entry>
   
 </feed>
