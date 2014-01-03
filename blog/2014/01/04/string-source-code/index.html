@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>You Sharp</title>
+  <title>String source code - You Sharp</title>
   <meta name="author" content="lingguo">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://nkcoder.github.io">
+  <link rel="canonical" href="http://nkcoder.github.io/blog/2014/01/04/string-source-code">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -89,15 +89,13 @@
 </nav>
   <div class="container">
     <div class="row-fluid">
-      <div class="span9">
-  
-  
-  
-    <article>
       
+<article class="hentry span9" role="article">
+
+  
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/2014/01/04/string-source-code/">String Source Code</a></h1>
+      <h1 class="entry-title">String Source Code</h1>
     
     
       <p class="meta">
@@ -115,14 +113,14 @@
 
 <time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
         
-         | <a href="/blog/2014/01/04/string-source-code/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h4>1. 存储结构</h4>
+<div class="entry-content"><h4>1. 存储结构</h4>
 
 <pre><code>private final char value[];
 </code></pre>
@@ -274,18 +272,63 @@ public boolean equalsIgnoreCase(String anotherString) {
 
 <blockquote><p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p></blockquote>
 </div>
+
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
+
   
 
 
-    </article>
+<time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
+      
+
+<span class="categories">
   
-  <ul class="pager">
+    <a class='category' href='/blog/categories/source/'>Source</a>, <a class='category' href='/blog/categories/analysis/'>analysis</a>, <a class='category' href='/blog/categories/code/'>code</a>
+  
+</span>
+
+
+    </p>
     
-    <li><a href="/blog/archives">Blog Archives</a></li>
-    
-  </ul>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/2014/01/04/string-source-code/" data-via="" data-counturl="http://nkcoder.github.io/blog/2014/01/04/string-source-code/" >Tweet</a>
+  
+  
+  
 </div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
 <aside class="sidebar-nav span3">
   
     <section class="well">
@@ -302,7 +345,7 @@ public boolean equalsIgnoreCase(String anotherString) {
 <section class="well">
   <ul id="gh_repos" class="nav">
     <li class="nav-header">GitHub Repos</li>
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/nkcoder">@nkcoder</a> on GitHub
@@ -327,6 +370,7 @@ public boolean equalsIgnoreCase(String anotherString) {
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
@@ -342,7 +386,10 @@ public boolean equalsIgnoreCase(String anotherString) {
       var disqus_shortname = 'nkcoder';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/2014/01/04/string-source-code/';
+        var disqus_url = 'http://nkcoder.github.io/blog/2014/01/04/string-source-code/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
