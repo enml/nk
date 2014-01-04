@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: SourceCode/Java | You Sharp]]></title>
-  <link href="http://nkcoder.github.io/blog/categories/sourcecode-slash-java/atom.xml" rel="self"/>
+  <title><![CDATA[Category: java-api | You Sharp]]></title>
+  <link href="http://nkcoder.github.io/blog/categories/java-api/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-04T09:31:31+08:00</updated>
+  <updated>2014-01-04T09:44:13+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[String.java 源码学习]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/04/string-source-code/"/>
+    <link href="http://nkcoder.github.io/blog/2014/01/04/java-string-source/"/>
     <updated>2014-01-04T00:27:12+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/04/string-source-code</id>
+    <id>http://nkcoder.github.io/blog/2014/01/04/java-string-source</id>
     <content type="html"><![CDATA[<h4>1. 存储结构</h4>
 
 <pre><code><div class="highlight"><pre><code class="java"><span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
@@ -28,7 +28,7 @@
 
 <h4>2. 构造函数</h4>
 
-<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[],             StringBuffer, StringBuilder等。</p></blockquote>
+<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
 
 <p>2.1</p>
 
