@@ -109,6 +109,293 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-05T22:07:11+08:00" pubdate data-updated="true">Jan 5<span>th</span>, 2014</time>
+        
+         | <a href="/blog/20140105/github-pages-and-octopress-blog-built/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
+
+<h3>1. 环境准备</h3>
+
+<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
+
+<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
+git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
+
+<h4>1.2 安装ruby</h4>
+
+<p>安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
+
+<pre><code>$ cd Devkit
+$ ruby dk.rb init
+$ ruby dk.rb install    
+</code></pre>
+
+<h4>1.3 安装Octopress</h4>
+
+<p>默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
+
+<pre><code>$ gem sources -a http://ruby.taobao.org
+$ gem sources -r http://rubygems.org
+$ gem sources -l
+</code></pre>
+
+<p>安装Octopress到指定的目录：</p>
+
+<pre><code>git clone git://github.com/imathis/octopress.git /d/yousharp
+</code></pre>
+
+<p>打开安装目录/d/yousharp的Gemfile文件，将第一行的source改为淘宝的源：</p>
+
+<pre><code>source "http://ruby.taobao.org"
+</code></pre>
+
+<h4>1.4 安装bundler</h4>
+
+<pre><code>$ gem install bundler
+$ bundle install
+</code></pre>
+
+<h4>1.5 安装主题，生成博客并预览</h4>
+
+<p>Octopress的<a href="http://opthemes.com/">主题列表</a>，我使用的是：<a href="https://github.com/bkutil/bootstrap-theme">Bootstrap theme</a>：</p>
+
+<pre><code>$ git clone git://github.com/bkutil/bootstrap-theme.git bootstrap-theme
+$ cp -R bootstrap-theme $MY_OCTOBLOG/.themes/bootstrap
+$ rake install['bootstrap']
+$ rake generate
+$ rake preview
+</code></pre>
+
+<blockquote><p>访问<a href="http://localhost:4000">http://localhost:4000</a>即可预览。</p></blockquote>
+
+<h4>1.6 修改环境变量支持中文</h4>
+
+<p>新建环境变量：LANG 和 LC_ALL，值均为zh_CN.UTF_8</p>
+
+<h3>2. 托管到github pages</h3>
+
+<h4>2.1 新建github repo</h4>
+
+<p>在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
+
+<h4>2.2 github配置</h4>
+
+<pre><code>$ git config --global user.name "nkcoder"
+$ git config --global user.email "daniel5hbs@gmail.com"
+$ git config --global credential.helper cache
+$ git config --global credential.helper 'cache --timeout=3600'
+</code></pre>
+
+<blockquote><p>注意：credential helper 只对https有效，对ssh无效。</p></blockquote>
+
+<p>生成rsa key，并添加到github的SSH keys中：</p>
+
+<pre><code>$ ssh-keygen -t rsa -C "daniel5hbs"
+$ ssh -T git@github.com
+</code></pre>
+
+<h4>2.3 博客发布</h4>
+
+<pre><code>$ rake setup_github_pages
+$ rake generate
+$ rake deploy
+访问nkcoder.github.io。
+</code></pre>
+
+<h3>3. 新建博客或页面</h3>
+
+<pre><code>$ rake new_post['first-blog']
+$ rake new_page['about']
+$ rake generate
+$ rake preview 
+</code></pre>
+
+<blockquote><p>说明：使用<code>$ rake preview</code>可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新<code>$ rake generate</code>。</p></blockquote>
+
+<h3>4. 主题优化</h3>
+
+<h4>4.1 添加disqus评论</h4>
+
+<p>先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
+
+<pre><code># Disqus Comments
+disqus_short_name: nkcoder
+disqus_show_comment_count: yes 
+</code></pre>
+
+<blockquote><p>注意：将nkcoder替换为你的disqus帐号。</p></blockquote>
+
+<h4>4.2 代码高亮</h4>
+
+<p>首先下载安装python 2.x版本，然后修改_config.yml，修改为：</p>
+
+<pre><code>pygments: true
+</code></pre>
+
+<blockquote><p>注意冒号后有个空格。</p></blockquote>
+
+<p>在需要高亮的代码块使用语法：</p>
+
+<div class="highlight"><pre><code class="java"> <span class="n">your</span> <span class="n">code</span>
+    
+</code></pre></div>
+
+
+<p>或者使用三个反引号（左Alt键右边的键)：</p>
+
+<pre><code>```java
+your code
+```
+</code></pre>
+
+<h4>4.3. 在页面右侧添加分类等模块</h4>
+
+<p>系统自带的模块放在了目录：source/<em>include/asides下，我们自定义的模块放在目录：source/</em>include/custom/asides下。
+模块一：分类及标签
+使用插件<a href="https://github.com/ctdk/octopress-category-list">octopress-category-list</a>
+下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；</p>
+
+<p>模块二：最新博文
+这是系统默认的模块，在source/_include/asides目录下的recent_posts.html，样式可以自己修改；</p>
+
+<p>模块三：博客链接
+在source/_include/custom/asides目录下新建blogroll.html，比如内容可以为：</p>
+
+<pre><code>&lt;section&gt;
+    &lt;h4&gt; Blogroll &lt;/h4&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/section&gt;
+</code></pre>
+
+<p>模块四：豆瓣阅读列表
+新建douban.html，进入<a href="http://www.douban.com/service/badgemakerjs">豆瓣收藏秀</a>生成js代码，将内容写入douban.html中，如：</p>
+
+<pre><code>&lt;section&gt;
+    &lt;h4&gt; Want To Read&lt;/h4&gt;
+    &lt;div&gt;
+    &lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
+    &lt;/div&gt;
+&lt;/section&gt;
+</code></pre>
+
+<p>模块五：disqus最新评论
+新建模块文件：recent_comments.html，写入disqus的js代码，如：</p>
+
+<pre><code>&lt;section&gt;
+    &lt;h4&gt; Recent Comments &lt;/h4&gt;
+    &lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
+&lt;/section&gt;
+</code></pre>
+
+<p>然后修改_config.yml文件，将需要在侧边显示的模块包含在default_asides里，如：</p>
+
+<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html]
+</code></pre>
+
+<blockquote><p>根据包含的顺序，自上向下地展示。</p></blockquote>
+
+<h3>5. 不同环境下博客的同步</h3>
+
+<p>如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。</p>
+
+<h4>5.1 分支的概念</h4>
+
+<p>Octopress默认有两个分支，一个是source，包含生成博客的所有文件，另一个是master，即博客本身。
+当我们本地配置完后，master分支在目录_deploy中，因为以下划线开头，当我们向source分支提交时$ git push -u origin source时，master分支被忽略，而当我们使用rake部署时$ rake deploy，master分支则更新。</p>
+
+<h4>5.2 将博客拷贝到本地的步骤</h4>
+
+<p>首先将source分支拷贝到本地的博客目录：</p>
+
+<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
+</code></pre>
+
+<blockquote><p>将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。</p></blockquote>
+
+<p>然后，将master分支拷贝到_deploy目录：</p>
+
+<pre><code>$ cd mybolg
+$ git clone git@github.com:nkcoder/nkcoder.github.io.git _deploy
+</code></pre>
+
+<p>最后，安装与配置：(前提：安装好python)</p>
+
+<pre><code>$ gem install bundler
+$ bundle install
+$ rake setup_github_pages
+</code></pre>
+
+<p>可能需要输入github repo的地址，</p>
+
+<pre><code>Enter the read/write url for your repository
+(For example, 'git@github.com:nkcoder/nkcoder.github.com)
+</code></pre>
+
+<h4>5.3 不同环境的同步</h4>
+
+<p>在切换环境之前，确保对所做的修改都提交了：</p>
+
+<pre><code>$ ranke generate
+$ git add .
+$ git commit -am 'your comment'
+$ git push origin source
+$ rake deploy 
+
+切换环境之后，将所有的更新拷贝下来：
+
+$ cd myblog
+$ git pull origin source
+$ cd ./_deploy
+$ git pull origin master
+</code></pre>
+
+<p>参考博文：（非常感谢）</p>
+
+<ul>
+<li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
+<li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
+<li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
+<li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/20140105/vim-basic-usage/">Vim 常用的基本操作</a></h1>
     
     
@@ -711,11 +998,13 @@ done
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/notech/'>NoTech (1)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
 		
 		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
 		
@@ -735,6 +1024,10 @@ done
 </section>
 
 
+<section>
+	<h4> Recent Comments </h4>
+	<div id="dsq-recentcomments" class="dsq-widget"><script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"></script></div>
+</section>
 <section>
 <h4> Want To Read</h4>
 <div>
