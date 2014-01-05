@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T15:31:22+08:00</updated>
+  <updated>2014-01-05T18:11:22+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[vim 常用的基本操作]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/05/vim-basic-usage/"/>
+    <link href="http://nkcoder.github.io/blog/20140105/vim-basic-usage/"/>
     <updated>2014-01-05T14:52:26+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/05/vim-basic-usage</id>
+    <id>http://nkcoder.github.io/blog/20140105/vim-basic-usage</id>
     <content type="html"><![CDATA[<h3>1. vim的三种模式</h3>
 
 <ul>
@@ -191,9 +191,9 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
   
   <entry>
     <title type="html"><![CDATA[bash for循环用法示例]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example/"/>
+    <link href="http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example/"/>
     <updated>2014-01-05T14:36:30+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example</id>
+    <id>http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example</id>
     <content type="html"><![CDATA[<blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
 
 <h4>1. for循环的第一种形式：</h4>
@@ -350,9 +350,9 @@ done
   
   <entry>
     <title type="html"><![CDATA[String.java 源码学习]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/04/java-string-source/"/>
+    <link href="http://nkcoder.github.io/blog/20140104/java-string-source/"/>
     <updated>2014-01-04T00:27:12+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/04/java-string-source</id>
+    <id>http://nkcoder.github.io/blog/20140104/java-string-source</id>
     <content type="html"><![CDATA[<h4>1. 存储结构</h4>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>

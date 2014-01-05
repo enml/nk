@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: linux | You Sharp]]></title>
+  <title><![CDATA[Category: Linux | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T15:31:22+08:00</updated>
+  <updated>2014-01-05T18:11:22+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[vim 常用的基本操作]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/05/vim-basic-usage/"/>
+    <link href="http://nkcoder.github.io/blog/20140105/vim-basic-usage/"/>
     <updated>2014-01-05T14:52:26+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/05/vim-basic-usage</id>
+    <id>http://nkcoder.github.io/blog/20140105/vim-basic-usage</id>
     <content type="html"><![CDATA[<h3>1. vim的三种模式</h3>
 
 <ul>

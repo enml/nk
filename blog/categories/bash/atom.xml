@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: linux-bash | You Sharp]]></title>
-  <link href="http://nkcoder.github.io/blog/categories/linux-bash/atom.xml" rel="self"/>
+  <title><![CDATA[Category: Bash | You Sharp]]></title>
+  <link href="http://nkcoder.github.io/blog/categories/bash/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T15:31:22+08:00</updated>
+  <updated>2014-01-05T18:11:22+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[bash for循环用法示例]]></title>
-    <link href="http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example/"/>
+    <link href="http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example/"/>
     <updated>2014-01-05T14:36:30+08:00</updated>
-    <id>http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example</id>
+    <id>http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example</id>
     <content type="html"><![CDATA[<blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
 
 <h4>1. for循环的第一种形式：</h4>
