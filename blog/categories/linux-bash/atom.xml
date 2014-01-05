@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux-bash | You Sharp]]></title>
+  <link href="http://nkcoder.github.io/blog/categories/linux-bash/atom.xml" rel="self"/>
+  <link href="http://nkcoder.github.io/"/>
+  <updated>2014-01-05T15:17:37+08:00</updated>
+  <id>http://nkcoder.github.io/</id>
+  <author>
+    <name><![CDATA[lingguo]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[bash for循环用法示例]]></title>
+    <link href="http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example/"/>
+    <updated>2014-01-05T14:36:30+08:00</updated>
+    <id>http://nkcoder.github.io/blog/2014/01/05/bash-for-loop-by-example</id>
+    <content type="html"><![CDATA[<blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
+
+<h4>1. for循环的第一种形式：</h4>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="k">for </span>variable in 1 2 3 4 5
+<span class="k">do</span>
+<span class="k">    </span><span class="nb">command</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>示例1：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for </span>i in 1 2 3 4 5
+<span class="k">do</span>
+<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
+示例2：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
+<span class="k">do</span>
+<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
+示例3：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="nb">echo</span> <span class="s2">&quot;Bash version ${BASH_VERSION}...&quot;</span>
+<span class="k">for </span>i in <span class="o">{</span>0..10..2<span class="o">}</span>
+  <span class="k">do</span>
+<span class="k">     </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>使用for遍历文件，语法为：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="k">for </span>file in file1 file2 file3 file4
+<span class="k">do</span>
+<span class="k">    </span>commands
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>示例4：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for </span>file in /etc/*
+<span class="k">do</span>
+<span class="k">    if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+        <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+        <span class="nb">break</span>
+<span class="nb">    </span><span class="k">fi</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>其中for file in /etc/* 等价于：</p>
+
+<pre><code>for file in `ls /etc/*`    
+for file in $(ls /etc/*)
+</code></pre>
+
+<h4>2. for循环的第二种形式：</h4>
+
+<p>与C语言for循环类似的语法：</p>
+
+<pre><code>for (( EXP1; EXP2; EXP3 ))
+do
+    commands
+done
+</code></pre>
+
+<p>示例5：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for</span> <span class="o">((</span> <span class="nv">c</span><span class="o">=</span>1; c&amp;lt;<span class="o">=</span>5; c++ <span class="o">))</span>
+<span class="k">do</span>
+<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $c times&quot;</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>当for的EXP1，EXP2，EXP3都为空时，即为无限循环：
+示例6：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for</span> <span class="o">((</span> ; ; <span class="o">))</span>
+<span class="k">do</span>
+<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;infinite loops [ hit CTRL+C to stop]&quot;</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<h4>3. for循环也支持break和continue关键字，与C语言一致</h4>
+
+<p>示例7：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="k">for </span>file in /etc/*
+<span class="k">do</span>
+<span class="k">    if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+        <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+        <span class="nb">break</span>
+<span class="nb">    </span><span class="k">fi</span>
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+
+<p>示例8：</p>
+
+<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
+<span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
+<span class="k">for </span>f in <span class="nv">$FILES</span>
+<span class="k">do</span>
+    <span class="c"># if .bak backup file exists, read next file</span>
+    <span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
+        <span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
+    <span class="k">fi</span>
+    <span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
+    /bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
+<span class="k">done</span>
+</code></pre></div>
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>
