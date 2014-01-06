@@ -4,7 +4,7 @@
   <title><![CDATA[Category: OpenSource | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/opensource/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T22:40:09+08:00</updated>
+  <updated>2014-01-06T22:45:34+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -29,6 +29,9 @@
 <h4>2. 构造函数</h4>
 
 <blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
+
+<!--more-->
+
 
 <p>2.1</p>
 

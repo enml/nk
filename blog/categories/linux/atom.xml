@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T22:40:09+08:00</updated>
+  <updated>2014-01-06T22:45:34+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -29,6 +29,9 @@
 模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p></li>
 <li><p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p></li>
 </ul>
+
+
+<!--more-->
 
 
 <h3>2. 一般模式下的常用操作：</h3>

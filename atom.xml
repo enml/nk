@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-05T22:40:09+08:00</updated>
+  <updated>2014-01-06T22:45:34+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -35,6 +35,9 @@ git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/
 $ ruby dk.rb init
 $ ruby dk.rb install    
 </code></pre>
+
+<!--more-->
+
 
 <h4>1.3 安装Octopress</h4>
 
@@ -204,6 +207,15 @@ your code
 
 <blockquote><p>根据包含的顺序，自上向下地展示。</p></blockquote>
 
+<h4>4.4 显示摘要</h4>
+
+<p>在文章中的某一行添加如下代码即可：</p>
+
+<pre><code>&lt;!--more--&gt;
+</code></pre>
+
+<p>页面显示“Read on->&ldquo;， 剩下的内容会隐藏。</p>
+
 <h3>5. 不同环境下博客的同步</h3>
 
 <p>如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。</p>
@@ -287,6 +299,9 @@ $ git pull origin master
 模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p></li>
 <li><p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p></li>
 </ul>
+
+
+<!--more-->
 
 
 <h3>2. 一般模式下的常用操作：</h3>
@@ -464,6 +479,11 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
 </code></pre></div>
 
 
+
+
+<!--more-->
+
+
 <p>示例1：</p>
 
 <div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
@@ -623,6 +643,9 @@ done
 <h4>2. 构造函数</h4>
 
 <blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
+
+<!--more-->
+
 
 <p>2.1</p>
 
