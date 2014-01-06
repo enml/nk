@@ -18,6 +18,7 @@ categories: OpenSource
 
 >String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。
 
+<!--more-->
 2.1
 	{% highlight java %}
 	public String() {

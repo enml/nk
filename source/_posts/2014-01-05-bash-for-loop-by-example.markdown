@@ -18,6 +18,7 @@ categories: Bash
     done
     {% endhighlight bash %}
 
+<!--more-->
 示例1：
 
     {% highlight bash %}
