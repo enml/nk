@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-06T22:45:34+08:00</updated>
+  <updated>2014-01-07T21:51:51+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,85 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[MySql优化在项目中的应用]]></title>
+    <link href="http://nkcoder.github.io/blog/20140107/mysql-optize-in-project/"/>
+    <updated>2014-01-07T21:38:18+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140107/mysql-optize-in-project</id>
+    <content type="html"><![CDATA[<h3>1. 提出问题</h3>
+
+<p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
+
+<pre><code>SELECT
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+FROM
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+WHERE
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
+AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
+AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
+AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
+</code></pre>
+
+<p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p>
+
+<!--more-->
+
+
+<h3>2. 优化方案</h3>
+
+<p>我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
+
+<h4>2.1 通过insert into select汇总数据</h4>
+
+<p>创建表结构之后（周增表和月增表的表结构和日增表一致），通过insert into TABLE select 语句可以将查询的结果写入指定的表中，完整的SQL语句为：</p>
+
+<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date) SELECT 
+tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) as tv_count_app, 
+sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AS tv_date 
+FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AND 
+SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid
+</code></pre>
+
+<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件&#8221;，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
+
+<h4>2.2 通过load data从文件导数据</h4>
+
+<p>因为select语句不会受binlog的限制，也就是说，数据是可以查出来的，只是没法一下子写入表中。我们可以先将查出来的数据写入文件，然后通过MySql的load data local infile命令从文件中将数据导入表中。
+查询数据存入文件：</p>
+
+<pre><code>selectSql="SELECT tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) 
+as tv_count_app, sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AS tv_date FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AND SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid"
+
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$selectSql" &gt; $dataFilePath
+</code></pre>
+
+<p>从文件将数据load进表中：</p>
+
+<pre><code>loadDataSql="load data local infile '$dataFilePath' into table t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,
+tv_count_app,tv_display_count_app,tv_date)"
+
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadDataSql"
+</code></pre>
+
+<h3>3. 总结</h3>
+
+<p>优化之后，周榜和月榜的耗时大概在10s左右，与日榜差不多。整个系统的执行时间从30min左右降到10分钟左右，应该说效果还是比较明显的。
+我的方案只是一种形式的优化，肯定不是最优的，比如多表联查的效率很低，这应该也是个优化点，还会继续探索。</p>
+
+<h3>参考</h3>
+
+<ul>
+<li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[使用github pages和Octopress搭建静态博客及配置]]></title>
@@ -301,9 +380,6 @@ $ git pull origin master
 </ul>
 
 
-<!--more-->
-
-
 <h3>2. 一般模式下的常用操作：</h3>
 
 <h4>2.1 光标移动</h4>
@@ -319,8 +395,12 @@ e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个�
 
 CTRL+f: 屏幕向下翻页，相当于PgUp;
 CTRL+b: 屏幕向上翻页，相当于PgDn；
+</code></pre>
 
-0: 移动到光标所在行的第一个字符处；
+<!--more-->
+
+
+<pre><code>0: 移动到光标所在行的第一个字符处；
 $: 移动到光标所在行的最后一个字符处；
 ^: 移动到光标所在行的第一个非空字符处；
 
@@ -479,11 +559,6 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
 </code></pre></div>
 
 
-
-
-<!--more-->
-
-
 <p>示例1：</p>
 
 <div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
@@ -505,6 +580,11 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     <span class="k">done</span>
     
 </code></pre></div>
+
+
+
+
+<!--more-->
 
 
 <p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
@@ -631,7 +711,7 @@ done
     <link href="http://nkcoder.github.io/blog/20140104/java-string-source/"/>
     <updated>2014-01-04T00:27:12+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140104/java-string-source</id>
-    <content type="html"><![CDATA[<h4>1. 存储结构</h4>
+    <content type="html"><![CDATA[<h3>1. 存储结构</h3>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
     
@@ -640,14 +720,11 @@ done
 
 <blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
 
-<h4>2. 构造函数</h4>
+<h3>2. 构造函数</h3>
 
 <blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
 
-<!--more-->
-
-
-<p>2.1</p>
+<h4>2.1</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
@@ -663,7 +740,10 @@ done
 
 <blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
 
-<p>2.2</p>
+<!--more-->
+
+
+<h4>2.2</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
         <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
@@ -684,7 +764,7 @@ done
 
 <blockquote><p>备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。</p></blockquote>
 
-<p>2.3</p>
+<h4>2.3</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
         <span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
@@ -707,9 +787,9 @@ done
 
 <blockquote><p>备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。</p></blockquote>
 
-<h4>3. 常用函数</h4>
+<h3>3. 常用函数</h3>
 
-<p>3.1</p>
+<h4>3.1</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
@@ -731,7 +811,7 @@ done
 
 <blockquote><p>备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。</p></blockquote>
 
-<p>3.2</p>
+<h4>3.2</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
@@ -755,7 +835,7 @@ done
 
 <blockquote><p>备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。</p></blockquote>
 
-<p>3.3</p>
+<h4>3.3</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
@@ -791,7 +871,7 @@ done
 
 <blockquote><p>备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。</p></blockquote>
 
-<p>3.4</p>
+<h4>3.4</h4>
 
 <div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
         <span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>

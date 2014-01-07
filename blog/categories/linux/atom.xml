@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-06T22:45:34+08:00</updated>
+  <updated>2014-01-07T21:51:51+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -31,9 +31,6 @@
 </ul>
 
 
-<!--more-->
-
-
 <h3>2. 一般模式下的常用操作：</h3>
 
 <h4>2.1 光标移动</h4>
@@ -49,8 +46,12 @@ e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个�
 
 CTRL+f: 屏幕向下翻页，相当于PgUp;
 CTRL+b: 屏幕向上翻页，相当于PgDn；
+</code></pre>
 
-0: 移动到光标所在行的第一个字符处；
+<!--more-->
+
+
+<pre><code>0: 移动到光标所在行的第一个字符处；
 $: 移动到光标所在行的最后一个字符处；
 ^: 移动到光标所在行的第一个非空字符处；
 

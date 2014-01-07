@@ -107,6 +107,64 @@
     <article class="post">
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-07T21:38:18+08:00" pubdate data-updated="true">Jan 7<span>th</span>, 2014</time>
+        
+         | <a href="/blog/20140107/mysql-optize-in-project/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3>1. 提出问题</h3>
+
+<p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
+
+<pre><code>SELECT
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+FROM
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+WHERE
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
+AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
+AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
+AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
+</code></pre>
+
+<p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/20140107/mysql-optize-in-project/">Read on &rarr;</a>
+    </footer>
+  
+
+</article>
+
+
+    <article class="post">
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></h1>
     
     
@@ -202,6 +260,23 @@ $ ruby dk.rb install
 </ul>
 
 
+<h3>2. 一般模式下的常用操作：</h3>
+
+<h4>2.1 光标移动</h4>
+
+<pre><code>h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；
+
+b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
+e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个短单词、长单词；
+
+(, ): 从光标所在的语句块开始，(表示移动到前一个语句块，)表示移动到后一个语句块；
+{, }: 从光标所在的段落开始，{表示向前移动一个段落，}表示向后移动一个段落；可以理解为从一个空行移动到前一个或者后一个空行；
+%: 跳转到匹配的(, ), {, }, [, ]
+
+CTRL+f: 屏幕向下翻页，相当于PgUp;
+CTRL+b: 屏幕向上翻页，相当于PgDn；
+</code></pre>
+
 </div>
   
   
@@ -253,6 +328,29 @@ $ ruby dk.rb install
 </code></pre></div>
 
 
+<p>示例1：</p>
+
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in 1 2 3 4 5
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
+<p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
+示例2：</p>
+
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
 
 
 </div>
@@ -294,7 +392,7 @@ $ ruby dk.rb install
   </header>
 
 
-  <div class="entry-content"><h4>1. 存储结构</h4>
+  <div class="entry-content"><h3>1. 存储结构</h3>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
     
@@ -303,9 +401,25 @@ $ ruby dk.rb install
 
 <blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
 
-<h4>2. 构造函数</h4>
+<h3>2. 构造函数</h3>
 
 <blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
+
+<h4>2.1</h4>
+
+<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+</code></pre></div>
+
+
+<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
 
 </div>
   
