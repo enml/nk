@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-07T21:51:51+08:00</updated>
+  <updated>2014-01-07T22:03:34+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -18,17 +18,16 @@
     <link href="http://nkcoder.github.io/blog/20140107/mysql-optize-in-project/"/>
     <updated>2014-01-07T21:38:18+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140107/mysql-optize-in-project</id>
-    <content type="html"><![CDATA[<h3>1. 提出问题</h3>
-
+    <content type="html"><![CDATA[<h3 id="section">1. 提出问题</h3>
 <p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
 
 <pre><code>SELECT
-    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
-    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+	vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+	sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
 FROM
-    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+	vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
 WHERE
-    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+	vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
 AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
 AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
 AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
@@ -38,27 +37,22 @@ AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
 <p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p>
 
 <!--more-->
+<p>### 2. 优化方案
+我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
 
-
-<h3>2. 优化方案</h3>
-
-<p>我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
-
-<h4>2.1 通过insert into select汇总数据</h4>
-
+<h4 id="insert-into-select">2.1 通过insert into select汇总数据</h4>
 <p>创建表结构之后（周增表和月增表的表结构和日增表一致），通过insert into TABLE select 语句可以将查询的结果写入指定的表中，完整的SQL语句为：</p>
 
-<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date) SELECT 
+<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date)	SELECT 
 tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) as tv_count_app, 
 sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AS tv_date 
 FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AND 
 SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid
 </code></pre>
 
-<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件&#8221;，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
+<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件”，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
 
-<h4>2.2 通过load data从文件导数据</h4>
-
+<h4 id="load-data">2.2 通过load data从文件导数据</h4>
 <p>因为select语句不会受binlog的限制，也就是说，数据是可以查出来的，只是没法一下子写入表中。我们可以先将查出来的数据写入文件，然后通过MySql的load data local infile命令从文件中将数据导入表中。
 查询数据存入文件：</p>
 
@@ -78,17 +72,15 @@ tv_count_app,tv_display_count_app,tv_date)"
 mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadDataSql"
 </code></pre>
 
-<h3>3. 总结</h3>
-
+<h3 id="section-1">3. 总结</h3>
 <p>优化之后，周榜和月榜的耗时大概在10s左右，与日榜差不多。整个系统的执行时间从30min左右降到10分钟左右，应该说效果还是比较明显的。
 我的方案只是一种形式的优化，肯定不是最优的，比如多表联查的效率很低，这应该也是个优化点，还会继续探索。</p>
 
-<h3>参考</h3>
+<h3 id="section-2">参考</h3>
 
 <ul>
-<li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
+  <li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
 </ul>
-
 ]]></content>
   </entry>
   
@@ -97,30 +89,26 @@ mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadData
     <link href="http://nkcoder.github.io/blog/20140105/github-pages-and-octopress-blog-built/"/>
     <updated>2014-01-05T22:07:11+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140105/github-pages-and-octopress-blog-built</id>
-    <content type="html"><![CDATA[<blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
+    <content type="html"><![CDATA[<blockquote>
+  <p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p>
+</blockquote>
 
-<h3>1. 环境准备</h3>
-
-<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
-
-<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
+<h3 id="section">1. 环境准备</h3>
+<p>#### 1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code>
+先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
 git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
 
-<h4>1.2 安装ruby</h4>
-
+<h4 id="ruby">1.2 安装ruby</h4>
 <p>安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
 
 <pre><code>$ cd Devkit
 $ ruby dk.rb init
-$ ruby dk.rb install    
+   	$ ruby dk.rb install	
 </code></pre>
 
 <!--more-->
-
-
-<h4>1.3 安装Octopress</h4>
-
-<p>默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
+<p>#### 1.3 安装Octopress
+默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
 
 <pre><code>$ gem sources -a http://ruby.taobao.org
 $ gem sources -r http://rubygems.org
@@ -137,44 +125,36 @@ $ gem sources -l
 <pre><code>source "http://ruby.taobao.org"
 </code></pre>
 
-<h4>1.4 安装bundler</h4>
+<h4 id="bundler">1.4 安装bundler</h4>
 
 <pre><code>$ gem install bundler
 $ bundle install
 </code></pre>
 
-<h4>1.5 安装主题，生成博客并预览</h4>
-
+<h4 id="section-1">1.5 安装主题，生成博客并预览</h4>
 <p>Octopress的<a href="http://opthemes.com/">主题列表</a>，我使用的是：<a href="https://github.com/bkutil/bootstrap-theme">Bootstrap theme</a>：</p>
 
 <pre><code>$ git clone git://github.com/bkutil/bootstrap-theme.git bootstrap-theme
 $ cp -R bootstrap-theme $MY_OCTOBLOG/.themes/bootstrap
 $ rake install['bootstrap']
 $ rake generate
-$ rake preview
+$ rake preview &gt;访问[http://localhost:4000](http://localhost:4000)即可预览。
 </code></pre>
 
-<blockquote><p>访问<a href="http://localhost:4000">http://localhost:4000</a>即可预览。</p></blockquote>
-
-<h4>1.6 修改环境变量支持中文</h4>
-
+<h4 id="section-2">1.6 修改环境变量支持中文</h4>
 <p>新建环境变量：LANG 和 LC_ALL，值均为zh_CN.UTF_8</p>
 
-<h3>2. 托管到github pages</h3>
+<h3 id="github-pages">2. 托管到github pages</h3>
+<p>#### 2.1 新建github repo
+在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
 
-<h4>2.1 新建github repo</h4>
-
-<p>在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
-
-<h4>2.2 github配置</h4>
+<h4 id="github">2.2 github配置</h4>
 
 <pre><code>$ git config --global user.name "nkcoder"
 $ git config --global user.email "daniel5hbs@gmail.com"
 $ git config --global credential.helper cache
-$ git config --global credential.helper 'cache --timeout=3600'
+$ git config --global credential.helper 'cache --timeout=3600' &gt;注意：credential helper 只对https有效，对ssh无效。
 </code></pre>
-
-<blockquote><p>注意：credential helper 只对https有效，对ssh无效。</p></blockquote>
 
 <p>生成rsa key，并添加到github的SSH keys中：</p>
 
@@ -182,7 +162,7 @@ $ git config --global credential.helper 'cache --timeout=3600'
 $ ssh -T git@github.com
 </code></pre>
 
-<h4>2.3 博客发布</h4>
+<h4 id="section-3">2.3 博客发布</h4>
 
 <pre><code>$ rake setup_github_pages
 $ rake generate
@@ -190,58 +170,41 @@ $ rake deploy
 访问nkcoder.github.io。
 </code></pre>
 
-<h3>3. 新建博客或页面</h3>
+<h3 id="section-4">3. 新建博客或页面</h3>
 
 <pre><code>$ rake new_post['first-blog']
 $ rake new_page['about']
 $ rake generate
-$ rake preview 
+$ rake preview  &gt;说明：使用`$ rake preview`可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新`$ rake generate`。
 </code></pre>
 
-<blockquote><p>说明：使用<code>$ rake preview</code>可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新<code>$ rake generate</code>。</p></blockquote>
-
-<h3>4. 主题优化</h3>
-
-<h4>4.1 添加disqus评论</h4>
-
-<p>先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
+<h3 id="section-5">4. 主题优化</h3>
+<p>#### 4.1 添加disqus评论
+先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
 
 <pre><code># Disqus Comments
 disqus_short_name: nkcoder
-disqus_show_comment_count: yes 
+disqus_show_comment_count: yes  &gt;注意：将nkcoder替换为你的disqus帐号。
 </code></pre>
 
-<blockquote><p>注意：将nkcoder替换为你的disqus帐号。</p></blockquote>
-
-<h4>4.2 代码高亮</h4>
-
+<h4 id="section-6">4.2 代码高亮</h4>
 <p>首先下载安装python 2.x版本，然后修改_config.yml，修改为：</p>
 
-<pre><code>pygments: true
+<pre><code>pygments: true &gt;注意冒号后有个空格。
 </code></pre>
-
-<blockquote><p>注意冒号后有个空格。</p></blockquote>
 
 <p>在需要高亮的代码块使用语法：</p>
 
-<div class="highlight"><pre><code class="java"> <span class="n">your</span> <span class="n">code</span>
-    
+<div class="highlight"><pre><code class="java">	<span class="n">your</span> <span class="n">code</span>
+	
 </code></pre></div>
-
 
 <p>或者使用三个反引号（左Alt键右边的键)：</p>
 
 <pre><code>```java
 your code
-```
+``` #### 4.3. 在页面右侧添加分类等模块 系统自带的模块放在了目录：source/_include/asides下，我们自定义的模块放在目录：source/_include/custom/asides下。 模块一：分类及标签 使用插件[octopress-category-list](https://github.com/ctdk/octopress-category-list) 下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；
 </code></pre>
-
-<h4>4.3. 在页面右侧添加分类等模块</h4>
-
-<p>系统自带的模块放在了目录：source/<em>include/asides下，我们自定义的模块放在目录：source/</em>include/custom/asides下。
-模块一：分类及标签
-使用插件<a href="https://github.com/ctdk/octopress-category-list">octopress-category-list</a>
-下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；</p>
 
 <p>模块二：最新博文
 这是系统默认的模块，在source/_include/asides目录下的recent_posts.html，样式可以自己修改；</p>
@@ -250,12 +213,12 @@ your code
 在source/_include/custom/asides目录下新建blogroll.html，比如内容可以为：</p>
 
 <pre><code>&lt;section&gt;
-    &lt;h4&gt; Blogroll &lt;/h4&gt;
-    &lt;ul&gt;
-        &lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
-        &lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
-        &lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
-    &lt;/ul&gt;
+	&lt;h4&gt; Blogroll &lt;/h4&gt;
+	&lt;ul&gt;
+		&lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
+		&lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
+		&lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
+	&lt;/ul&gt;
 &lt;/section&gt;
 </code></pre>
 
@@ -263,10 +226,10 @@ your code
 新建douban.html，进入<a href="http://www.douban.com/service/badgemakerjs">豆瓣收藏秀</a>生成js代码，将内容写入douban.html中，如：</p>
 
 <pre><code>&lt;section&gt;
-    &lt;h4&gt; Want To Read&lt;/h4&gt;
-    &lt;div&gt;
-    &lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
-    &lt;/div&gt;
+	&lt;h4&gt; Want To Read&lt;/h4&gt;
+	&lt;div&gt;
+	&lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
+	&lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
 
@@ -274,44 +237,34 @@ your code
 新建模块文件：recent_comments.html，写入disqus的js代码，如：</p>
 
 <pre><code>&lt;section&gt;
-    &lt;h4&gt; Recent Comments &lt;/h4&gt;
-    &lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
+	&lt;h4&gt; Recent Comments &lt;/h4&gt;
+	&lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
 
 <p>然后修改_config.yml文件，将需要在侧边显示的模块包含在default_asides里，如：</p>
 
-<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html]
+<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html] &gt;根据包含的顺序，自上向下地展示。
 </code></pre>
 
-<blockquote><p>根据包含的顺序，自上向下地展示。</p></blockquote>
-
-<h4>4.4 显示摘要</h4>
-
+<h4 id="section-7">4.4 显示摘要</h4>
 <p>在文章中的某一行添加如下代码即可：</p>
 
-<pre><code>&lt;!--more--&gt;
+<pre><code>&lt;!--more--&gt; 页面显示“Read on-&gt;"， 剩下的内容会隐藏。
 </code></pre>
 
-<p>页面显示“Read on->&ldquo;， 剩下的内容会隐藏。</p>
-
-<h3>5. 不同环境下博客的同步</h3>
-
+<h3 id="section-8">5. 不同环境下博客的同步</h3>
 <p>如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。</p>
 
-<h4>5.1 分支的概念</h4>
-
+<h4 id="section-9">5.1 分支的概念</h4>
 <p>Octopress默认有两个分支，一个是source，包含生成博客的所有文件，另一个是master，即博客本身。
 当我们本地配置完后，master分支在目录_deploy中，因为以下划线开头，当我们向source分支提交时$ git push -u origin source时，master分支被忽略，而当我们使用rake部署时$ rake deploy，master分支则更新。</p>
 
-<h4>5.2 将博客拷贝到本地的步骤</h4>
-
+<h4 id="section-10">5.2 将博客拷贝到本地的步骤</h4>
 <p>首先将source分支拷贝到本地的博客目录：</p>
 
-<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
+<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp &gt;将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。
 </code></pre>
-
-<blockquote><p>将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。</p></blockquote>
 
 <p>然后，将master分支拷贝到_deploy目录：</p>
 
@@ -332,8 +285,7 @@ $ rake setup_github_pages
 (For example, 'git@github.com:nkcoder/nkcoder.github.com)
 </code></pre>
 
-<h4>5.3 不同环境的同步</h4>
-
+<h4 id="section-11">5.3 不同环境的同步</h4>
 <p>在切换环境之前，确保对所做的修改都提交了：</p>
 
 <pre><code>$ ranke generate
@@ -353,12 +305,11 @@ $ git pull origin master
 <p>参考博文：（非常感谢）</p>
 
 <ul>
-<li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
-<li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
-<li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
-<li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
+  <li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
+  <li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
+  <li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
+  <li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
 </ul>
-
 ]]></content>
   </entry>
   
@@ -367,26 +318,31 @@ $ git pull origin master
     <link href="http://nkcoder.github.io/blog/20140105/vim-basic-usage/"/>
     <updated>2014-01-05T14:52:26+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140105/vim-basic-usage</id>
-    <content type="html"><![CDATA[<h3>1. vim的三种模式</h3>
+    <content type="html"><![CDATA[<h3 id="vim">1. vim的三种模式</h3>
 
 <ul>
-<li><p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。</p></li>
-<li><p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br/>
-令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br/>
-辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p></li>
-<li><p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br/>
-模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p></li>
-<li><p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p></li>
+  <li>
+    <p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。  </p>
+  </li>
+  <li>
+    <p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br />
+令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br />
+辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p>
+  </li>
+  <li>
+    <p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br />
+模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p>
+  </li>
+  <li>
+    <p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p>
+  </li>
 </ul>
 
+<h3 id="section">2. 一般模式下的常用操作：</h3>
+<p>#### 2.1 光标移动
+	h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；</p>
 
-<h3>2. 一般模式下的常用操作：</h3>
-
-<h4>2.1 光标移动</h4>
-
-<pre><code>h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；
-
-b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
+<pre><code>b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
 e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个短单词、长单词；
 
 (, ): 从光标所在的语句块开始，(表示移动到前一个语句块，)表示移动到后一个语句块；
@@ -398,8 +354,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 </code></pre>
 
 <!--more-->
-
-
 <pre><code>0: 移动到光标所在行的第一个字符处；
 $: 移动到光标所在行的最后一个字符处；
 ^: 移动到光标所在行的第一个非空字符处；
@@ -413,8 +367,7 @@ G: 移动到文件的最后一行（且是第一个字符处）；
 数字n+回车Enter: 表示向下移动n行，等价于nj；
 </code></pre>
 
-<h4>2.2 查找替换</h4>
-
+<h4 id="section-1">2.2 查找替换</h4>
 <pre><code>/word: 从光标所在处向下搜索关键字word；
 ?word: 从光标所在处向上搜索关键字word；
 n: 向下搜索，查找下一个匹配项；
@@ -428,8 +381,7 @@ N: 向上搜索，查找上一个匹配项；
 :.,$s/src/dest/g: 查找范围为当前行到最后一行，将所有的src替换为dest；(因为在命令模式下，.表示当前行)
 </code></pre>
 
-<h4>2.3 删除、复制与粘贴</h4>
-
+<h4 id="section-2">2.3 删除、复制与粘贴</h4>
 <pre><code>x, X: x表示删除光标后的一个字符，X表示删除光标前的一个字符，前面可以加上数字n，表示删除n个字符， 即nx, nX；
 dd: 表示删除光标所在的行，前面带上数字n，表示删除当前行往下的n行（包括当前行）；
 d$: 表示删除光标所在的位置到该行的最后一个字符；
@@ -457,8 +409,7 @@ CTRL+r: 重做上一个操作；
 r,R: r表示替换光标所在字符，R表示替换光标所在字符及其后的字符，直到按ESC为止；
 </code></pre>
 
-<h4>2.4 块选择</h4>
-
+<h4 id="section-3">2.4 块选择</h4>
 <pre><code>v: 字符选择，从光标所在字符开始，配合h, j, k, l进行字符的选择；
 V: 行选择，将光标经过的行选中；
 CTRL+v: 块选择，从光标所在字符开始，选中块；
@@ -466,8 +417,7 @@ y: 复制选中的内容；
 p: 粘贴选中的内容；
 </code></pre>
 
-<h3>3. 编辑模式下的常用操作</h3>
-
+<h3 id="section-4">3. 编辑模式下的常用操作</h3>
 <pre><code>在编辑模式下，就是对文件的内容进行增删改，没有特殊的操作，光标的移动还是得进入到一般模式；
 从一般模式进入编辑模式的命令有：
 i, I: i表示在光标所在字符之前插入，I表示在光标所在行的第一个非空字符前插入；
@@ -480,21 +430,17 @@ s, S: s表示删除光标所在字符并进入插入模式，S表示删除光标
 CTR+n或者CTRL+p: 在编辑模式下，输入一些文字后，按CTRL+n或者CTRL+p可以出现提示文字；
 </code></pre>
 
-<h3>4. 命令行模式下的常用操作</h3>
+<h3 id="section-5">4. 命令行模式下的常用操作</h3>
+<p>#### 4.1 保存退出
+	:w  保存文件内容，但不退出；
+	:q  退出vim；如果文件内容没有被修改，则直接退出，如果文件内容修改了但没有保存，则会提示先保存后退出；
+	:q!  强制退出vim；如果修改过文件但是没有保存，则不保存且强制退出；
+	:e!  将文件恢复到最原始的状态，即上次保存的状态；
+	:wq  保存后退出；
+	:x  保存后退出；
+	说明：其实最常用的命令当属:w, :q, :x，如果是有意的修改，则应该随时注意保存，即:w，离开时尽量使用:q，如果是有意修改，应该已经保存了，如果作了无意修改，则会提示，比较安全，只有在修改完之后，确定保存并离开，可以使用:x，不过还是尽量少用；</p>
 
-<h4>4.1 保存退出</h4>
-
-<pre><code>:w  保存文件内容，但不退出；
-:q  退出vim；如果文件内容没有被修改，则直接退出，如果文件内容修改了但没有保存，则会提示先保存后退出；
-:q!  强制退出vim；如果修改过文件但是没有保存，则不保存且强制退出；
-:e!  将文件恢复到最原始的状态，即上次保存的状态；
-:wq  保存后退出；
-:x  保存后退出；
-说明：其实最常用的命令当属:w, :q, :x，如果是有意的修改，则应该随时注意保存，即:w，离开时尽量使用:q，如果是有意修改，应该已经保存了，如果作了无意修改，则会提示，比较安全，只有在修改完之后，确定保存并离开，可以使用:x，不过还是尽量少用；
-</code></pre>
-
-<h4>4.2 文件读写</h4>
-
+<h4 id="section-6">4.2 文件读写</h4>
 <pre><code>:w filename 将文件的内容另存为另一个文件
 :n1,n2 w filename 将文件的n1和n2行之间的内容另存为另一个文件；
 :w&gt;&gt;filename  将文件内容追加到另一个文件中；
@@ -502,8 +448,7 @@ CTR+n或者CTRL+p: 在编辑模式下，输入一些文字后，按CTRL+n或者C
 :f  显示当前文件的文件名
 </code></pre>
 
-<h4>4.3 其它常用</h4>
-
+<h4 id="section-7">4.3 其它常用</h4>
 <pre><code>:set nu  显示行号
 :set nonu  隐藏行号
 :set hlsearch  查找时高亮显示匹配项
@@ -511,8 +456,7 @@ CTR+n或者CTRL+p: 在编辑模式下，输入一些文字后，按CTRL+n或者C
 说明：以上命令一般写入vim的配置文件里，这样就不需要每次都调这些命令了。
 </code></pre>
 
-<h3>5. 多文件及分屏编辑</h3>
-
+<h3 id="section-8">5. 多文件及分屏编辑</h3>
 <pre><code>:r filename命令可以读入整个文件的内容，但如果指向复制或者重用另一个文件的部分内容，怎么办呢？可以使用多文件编辑或者分屏编辑；
 
 多文件：vim后接多个文件名，则可以在一个vim里打开多个文件，可以进行文件间的编辑；
@@ -537,8 +481,11 @@ $ vim -On file01 file02  分垂直两屏显示两个文件；
 $ vim -on file01 file02  分水平两屏显示两个文件；
 </code></pre>
 
-<blockquote><p>说明：以上这些命令都是基础且常用的，不要死记硬背，应该在vim下多练习，直到输入这些命令成为一种无意识的行为；vi
-m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣的可以找相关的文章参考；</p></blockquote>
+<blockquote>
+  <p>说明：以上这些命令都是基础且常用的，不要死记硬背，应该在vim下多练习，直到输入这些命令成为一种无意识的行为；vi
+m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣的可以找相关的文章参考；</p>
+</blockquote>
+
 ]]></content>
   </entry>
   
@@ -547,9 +494,11 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     <link href="http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example/"/>
     <updated>2014-01-05T14:36:30+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example</id>
-    <content type="html"><![CDATA[<blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
+    <content type="html"><![CDATA[<blockquote>
+  <p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p>
+</blockquote>
 
-<h4>1. for循环的第一种形式：</h4>
+<h4 id="for">1. for循环的第一种形式：</h4>
 
 <div class="highlight"><pre><code class="bash">    <span class="k">for </span>variable in 1 2 3 4 5
     <span class="k">do</span>
@@ -557,7 +506,6 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
 <span class="nb">    </span><span class="k">done</span>
     
 </code></pre></div>
-
 
 <p>示例1：</p>
 
@@ -568,7 +516,6 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     <span class="k">done</span>
     
 </code></pre></div>
-
 
 <p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
 示例2：</p>
@@ -581,12 +528,7 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     
 </code></pre></div>
 
-
-
-
 <!--more-->
-
-
 <p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
 示例3：</p>
 
@@ -599,7 +541,6 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     
 </code></pre></div>
 
-
 <p>使用for遍历文件，语法为：</p>
 
 <div class="highlight"><pre><code class="bash">    <span class="k">for </span>file in file1 file2 file3 file4
@@ -609,22 +550,20 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
     
 </code></pre></div>
 
-
 <p>示例4：</p>
 
-<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
-    <span class="k">for </span>file in /etc/*
-    <span class="k">do</span>
-<span class="k">        if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-            <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-            <span class="nb">break</span>
-<span class="nb">       </span><span class="k">fi</span>
-<span class="k">    done</span>
+<div class="highlight"><pre><code class="bash">	<span class="c">#!/bin/bash</span>
+	<span class="k">for </span>file in /etc/*
+	<span class="k">do</span>
+<span class="k">		if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+		<span class="k">then</span>
+<span class="k">			</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+			<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+			<span class="nb">break</span>
+<span class="nb">		</span><span class="k">fi</span>
+<span class="k">	done</span>
     
 </code></pre></div>
-
 
 <p>其中for file in /etc/* 等价于：</p>
 
@@ -632,76 +571,69 @@ m的功能很强大，而且支持丰富的插件，比如ctags等，有兴趣�
 for file in $(ls /etc/*)
 </code></pre>
 
-<h4>2. for循环的第二种形式：</h4>
-
+<h4 id="for-1">2. for循环的第二种形式：</h4>
 <p>与C语言for循环类似的语法：</p>
 
 <pre><code>for (( EXP1; EXP2; EXP3 ))
 do
-    commands
+	commands
 done
 </code></pre>
 
 <p>示例5：</p>
 
-<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
-    <span class="k">for</span> <span class="o">((</span> <span class="nv">c</span><span class="o">=</span>1; c&lt;<span class="o">=</span>5; c++ <span class="o">))</span>
-    <span class="k">do</span>
-<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $c times&quot;</span>
-    <span class="k">done</span>
+<div class="highlight"><pre><code class="bash">	<span class="c">#!/bin/bash</span>
+	<span class="k">for</span> <span class="o">((</span> <span class="nv">c</span><span class="o">=</span>1; c&lt;<span class="o">=</span>5; c++ <span class="o">))</span>
+	<span class="k">do</span>
+<span class="k">	   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $c times&quot;</span>
+	<span class="k">done</span>
     
 </code></pre></div>
-
 
 <p>当for的EXP1，EXP2，EXP3都为空时，即为无限循环：
 示例6：</p>
 
-<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
-    <span class="k">for</span> <span class="o">((</span> ; ; <span class="o">))</span>
-    <span class="k">do</span>
-<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;infinite loops [ hit CTRL+C to stop]&quot;</span>
-    <span class="k">done</span>
+<div class="highlight"><pre><code class="bash">	<span class="c">#!/bin/bash</span>
+	<span class="k">for</span> <span class="o">((</span> ; ; <span class="o">))</span>
+	<span class="k">do</span>
+<span class="k">	   </span><span class="nb">echo</span> <span class="s2">&quot;infinite loops [ hit CTRL+C to stop]&quot;</span>
+	<span class="k">done</span>
     
 </code></pre></div>
 
-
-<h4>3. for循环也支持break和continue关键字，与C语言一致</h4>
-
+<h4 id="forbreakcontinuec">3. for循环也支持break和continue关键字，与C语言一致</h4>
 <p>示例7：</p>
 
-<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
-    <span class="k">for </span>file in /etc/*
-    <span class="k">do</span>
-<span class="k">        if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-            <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-            <span class="nb">break</span>
-<span class="nb">       </span><span class="k">fi</span>
-<span class="k">    done</span>
+<div class="highlight"><pre><code class="bash">	<span class="c">#!/bin/bash</span>
+	<span class="k">for </span>file in /etc/*
+	<span class="k">do</span>
+<span class="k">		if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+		<span class="k">then</span>
+<span class="k">			</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+			<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+			<span class="nb">break</span>
+<span class="nb">		</span><span class="k">fi</span>
+<span class="k">	done</span>
     
 </code></pre></div>
-
 
 <p>示例8：</p>
 
-<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
-    <span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
-    <span class="k">for </span>f in <span class="nv">$FILES</span>
-    <span class="k">do</span>
-        <span class="c"># if .bak backup file exists, read next file</span>
-        <span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
-        <span class="k">then</span>
-<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
-            <span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
-        <span class="k">fi</span>
-        <span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
-        /bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
-    <span class="k">done</span>
+<div class="highlight"><pre><code class="bash">	<span class="c">#!/bin/bash</span>
+	<span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
+	<span class="k">for </span>f in <span class="nv">$FILES</span>
+	<span class="k">do</span>
+		<span class="c"># if .bak backup file exists, read next file</span>
+		<span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
+		<span class="k">then</span>
+<span class="k">			</span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
+			<span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
+		<span class="k">fi</span>
+		<span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
+		/bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
+	<span class="k">done</span>
     
 </code></pre></div>
-
-
 
 ]]></content>
   </entry>
@@ -711,176 +643,183 @@ done
     <link href="http://nkcoder.github.io/blog/20140104/java-string-source/"/>
     <updated>2014-01-04T00:27:12+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140104/java-string-source</id>
-    <content type="html"><![CDATA[<h3>1. 存储结构</h3>
+    <content type="html"><![CDATA[<h3 id="section">1. 存储结构</h3>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-    
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p>
+</blockquote>
 
-<blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
+<h3 id="section-1">2. 构造函数</h3>
 
-<h3>2. 构造函数</h3>
+<blockquote>
+  <p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p>
+</blockquote>
 
-<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
+<h4 id="section-2">2.1</h4>
 
-<h4>2.1</h4>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
-
-<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
+<blockquote>
+  <p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p>
+</blockquote>
 
 <!--more-->
+<p>#### 2.2</p>
 
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}</span>
 
-<h4>2.2</h4>
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuffer</span> <span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
+		<span class="kd">synchronized</span><span class="o">(</span><span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">buffer</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuffer</span> <span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-        <span class="kd">synchronized</span><span class="o">(</span><span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">buffer</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuilder</span> <span class="n">builder</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">builder</span><span class="o">.</span><span class="na">builder</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuilder</span> <span class="n">builder</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">builder</span><span class="o">.</span><span class="na">builder</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。</p>
+</blockquote>
 
-<blockquote><p>备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。</p></blockquote>
+<h4 id="section-3">2.3</h4>
 
-<h4>2.3</h4>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-    <span class="o">}</span>
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+	<span class="o">}</span>
 
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">,</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">charset</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">&quot;charset&quot;</span><span class="o">);</span>
-        <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">charset</span><span class="o">,</span> <span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">,</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">charset</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">&quot;charset&quot;</span><span class="o">);</span>
+		<span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">charset</span><span class="o">,</span> <span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。</p>
+</blockquote>
 
-<blockquote><p>备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。</p></blockquote>
+<h3 id="section-4">3. 常用函数</h3>
+<p>#### 3.1</p>
 
-<h3>3. 常用函数</h3>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+	<span class="o">}</span>
 
-<h4>3.1</h4>
+	<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isEmpty</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isEmpty</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">char</span> <span class="nf">charAt</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">((</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">))</span> <span class="o">{</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">return</span> <span class="n">value</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="kt">char</span> <span class="nf">charAt</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">((</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">))</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="n">value</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。</p>
+</blockquote>
 
-<blockquote><p>备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。</p></blockquote>
+<h4 id="section-5">3.2</h4>
 
-<h4>3.2</h4>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcBegin</span><span class="o">);</span>
+		<span class="o">}</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">srcEnd</span> <span class="o">&gt;</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span><span class="o">);</span>
+		<span class="o">}</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&gt;</span> <span class="n">srcEnd</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span> <span class="o">-</span> <span class="n">srcBegin</span><span class="o">);</span>
+		<span class="o">}</span>
+		<span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">dst</span><span class="o">,</span> <span class="n">dstBegin</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcBegin</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">srcEnd</span> <span class="o">&gt;</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&gt;</span> <span class="n">srcEnd</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span> <span class="o">-</span> <span class="n">srcBegin</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">dst</span><span class="o">,</span> <span class="n">dstBegin</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBytes</span><span class="o">(){</span>
-        <span class="k">return</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBytes</span><span class="o">(){</span>
+		<span class="k">return</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。</p>
+</blockquote>
 
-<blockquote><p>备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。</p></blockquote>
+<h4 id="section-6">3.3</h4>
 
-<h4>3.3</h4>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+		<span class="o">}</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">anObject</span> <span class="n">instanceOf</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">String</span> <span class="n">anotherString</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">anObject</span><span class="o">;</span>
+			<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
+				<span class="kt">char</span> <span class="n">v1</span><span class="o">[]</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+				<span class="kt">char</span> <span class="n">v2</span><span class="o">[]</span> <span class="o">=</span>  <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+				<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+				<span class="k">while</span> <span class="o">(</span><span class="n">n</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{}</span>
+					<span class="k">if</span> <span class="o">(</span><span class="n">v1</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">v2</span><span class="o">[</span><span class="n">i</span><span class="o">])</span>
+						<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+					<span class="n">i</span><span class="o">++;</span>
+				<span class="o">}</span>
+				<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+			<span class="o">}</span>
+		<span class="o">}</span>
+		<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-        <span class="o">}</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">anObject</span> <span class="n">instanceOf</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
-            <span class="n">String</span> <span class="n">anotherString</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">anObject</span><span class="o">;</span>
-            <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-                <span class="kt">char</span> <span class="n">v1</span><span class="o">[]</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
-                <span class="kt">char</span> <span class="n">v2</span><span class="o">[]</span> <span class="o">=</span>  <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-                <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-                <span class="k">while</span> <span class="o">(</span><span class="n">n</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{}</span>
-                    <span class="k">if</span> <span class="o">(</span><span class="n">v1</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">v2</span><span class="o">[</span><span class="n">i</span><span class="o">])</span>
-                        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-                    <span class="n">i</span><span class="o">++;</span>
-                <span class="o">}</span>
-                <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-            <span class="o">}</span>
-        <span class="o">}</span>
-        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equalsIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">?</span> <span class="kc">true</span>
-            <span class="o">:</span> <span class="o">(</span><span class="n">anotherString</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;&amp;</span> 
-            <span class="o">(</span><span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">&amp;&amp;</span> 
-            <span class="n">regionMatches</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">anotherString</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equalsIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">?</span> <span class="kc">true</span>
+			<span class="o">:</span> <span class="o">(</span><span class="n">anotherString</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;&amp;</span> 
+			<span class="o">(</span><span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">&amp;&amp;</span> 
+			<span class="n">regionMatches</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">anotherString</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。</p>
+</blockquote>
 
-<blockquote><p>备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。</p></blockquote>
+<h4 id="section-7">3.4</h4>
 
-<h4>3.4</h4>
-
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>
-    <span class="o">}</span>
-    
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
-
-<blockquote><p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p></blockquote>
+<blockquote>
+  <p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p>
+</blockquote>
 ]]></content>
   </entry>
   

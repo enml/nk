@@ -134,17 +134,16 @@
   </header>
 
 
-  <div class="entry-content"><h3>1. 提出问题</h3>
-
+  <div class="entry-content"><h3 id="section">1. 提出问题</h3>
 <p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
 
 <pre><code>SELECT
-    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
-    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+	vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+	sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
 FROM
-    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+	vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
 WHERE
-    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+	vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
 AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
 AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
 AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
@@ -194,22 +193,21 @@ AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
   </header>
 
 
-  <div class="entry-content"><blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
+  <div class="entry-content"><blockquote>
+  <p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p>
+</blockquote>
 
-<h3>1. 环境准备</h3>
-
-<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
-
-<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
+<h3 id="section">1. 环境准备</h3>
+<p>#### 1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code>
+先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
 git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
 
-<h4>1.2 安装ruby</h4>
-
+<h4 id="ruby">1.2 安装ruby</h4>
 <p>安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
 
 <pre><code>$ cd Devkit
 $ ruby dk.rb init
-$ ruby dk.rb install    
+   	$ ruby dk.rb install	
 </code></pre>
 
 </div>
@@ -253,26 +251,31 @@ $ ruby dk.rb install
   </header>
 
 
-  <div class="entry-content"><h3>1. vim的三种模式</h3>
+  <div class="entry-content"><h3 id="vim">1. vim的三种模式</h3>
 
 <ul>
-<li><p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。</p></li>
-<li><p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br/>
-令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br/>
-辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p></li>
-<li><p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br/>
-模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p></li>
-<li><p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p></li>
+  <li>
+    <p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。  </p>
+  </li>
+  <li>
+    <p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br />
+令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br />
+辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p>
+  </li>
+  <li>
+    <p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br />
+模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p>
+  </li>
+  <li>
+    <p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p>
+  </li>
 </ul>
 
+<h3 id="section">2. 一般模式下的常用操作：</h3>
+<p>#### 2.1 光标移动
+	h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；</p>
 
-<h3>2. 一般模式下的常用操作：</h3>
-
-<h4>2.1 光标移动</h4>
-
-<pre><code>h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；
-
-b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
+<pre><code>b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
 e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个短单词、长单词；
 
 (, ): 从光标所在的语句块开始，(表示移动到前一个语句块，)表示移动到后一个语句块；
@@ -324,9 +327,11 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
   </header>
 
 
-  <div class="entry-content"><blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
+  <div class="entry-content"><blockquote>
+  <p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p>
+</blockquote>
 
-<h4>1. for循环的第一种形式：</h4>
+<h4 id="for">1. for循环的第一种形式：</h4>
 
 <div class="highlight"><pre><code class="bash">    <span class="k">for </span>variable in 1 2 3 4 5
     <span class="k">do</span>
@@ -334,7 +339,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 <span class="nb">    </span><span class="k">done</span>
     
 </code></pre></div>
-
 
 <p>示例1：</p>
 
@@ -346,7 +350,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
     
 </code></pre></div>
 
-
 <p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
 示例2：</p>
 
@@ -357,9 +360,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
     <span class="k">done</span>
     
 </code></pre></div>
-
-
-
 
 </div>
   
@@ -402,34 +402,38 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
   </header>
 
 
-  <div class="entry-content"><h3>1. 存储结构</h3>
+  <div class="entry-content"><h3 id="section">1. 存储结构</h3>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-    
+	
 </code></pre></div>
 
+<blockquote>
+  <p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p>
+</blockquote>
 
-<blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
+<h3 id="section-1">2. 构造函数</h3>
 
-<h3>2. 构造函数</h3>
+<blockquote>
+  <p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p>
+</blockquote>
 
-<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
+<h4 id="section-2">2.1</h4>
 
-<h4>2.1</h4>
+<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+	<span class="o">}</span>
 
-<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-        <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-    <span class="o">}</span>
-    
+	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
+	<span class="o">}</span>
+	
 </code></pre></div>
 
-
-<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
+<blockquote>
+  <p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p>
+</blockquote>
 
 </div>
   
