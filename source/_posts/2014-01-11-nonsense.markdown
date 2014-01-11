@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "2014-01-11闲扯"
-description: 技术之外，闲扯
+title: "2014-01-11 插曲"
+description: 技术之外，生活插曲
 date: 2014-01-11 23:13:35 +0800
 comments: true
 tags: nonsense
