@@ -109,6 +109,51 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/20140111/nonsense/">2014-01-11闲扯</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-11T23:13:35+08:00" pubdate data-updated="true">Jan 11<span>th</span>, 2014</time>
+        
+         | <a href="/blog/20140111/nonsense/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>今天是个周六，按照我们码农的习惯，至少得中午起吧，洗洗直接吃个午饭。可我就没这么好的命啦，每天早上8点前得给我的部门老大发系统值班的报告（为什么呢？简而言之，就是这个系统在我接手之前，出过几次故障，本来也不是什么大事，关键是这几次故障都是被公司的张老大第一个亲自发现的，那问题就严重了，直接导致我现在的部门老大那是谨小慎微啊，我也是如履薄冰啊，幸好到现在为止，还没出过什么事），周末也不例外。不过由此带来的一个“副作用”就是，我每天7点左右起，完成值班报告，总不能回去继续睡个回笼觉吧，正好可以用来看看书，或者读读英语，现在都养成习惯了，算是额外的一个收获吧。</p>
+
+<p>早上也没什么异常报警，照例看看系统的各个页面以及日志是否正常。当看到频道页的一个榜单时，感觉不对劲，我立马知道问题处在哪儿了。这是前两天产品提的一个需求，需要前端和后台配合，我开发完了，将文件推送到cms的测试目录，将测试地址给了产品经理；然后，前端找产品经理要文件地址，产品经理把测试地址给了前端，后来前端说，她是找产品要的地址，调试完了直接上线了（引用的测试地址，因为线上的文件是当天生成的，而测试地址的是旧文件），关键是她上线时候，至少应该通知我或者产品一声的，而且我给的地址里明显含有test关键字，于是我就很郁闷。大周末的，谁都找不着，产品说周一再说吧。但排行榜是我的系统，出问题，我是首当其冲。跟我主管知会了一下，他也很郁闷，没办法，我只能默默地将系统上线，更新文件，然后推送到测试地址，以保证系统的展示是正常的。开发、产品和前端如果沟通不好，真的很容易出问题，有了这次的教训，以后不能单线和前端或者产品沟通，必须大家都在，把问题说清楚。</p>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/20140111/nonsense/">Read on &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></h1>
     
     
@@ -372,81 +417,9 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 
     </article>
   
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
-        
-         | <a href="/blog/20140104/java-string-source/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h3 id="section">1. 存储结构</h3>
-
-<div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-	
-</code></pre></div>
-
-<blockquote>
-  <p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p>
-</blockquote>
-
-<h3 id="section-1">2. 构造函数</h3>
-
-<blockquote>
-  <p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p>
-</blockquote>
-
-<h4 id="section-2">2.1</h4>
-
-<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-	<span class="o">}</span>
-
-	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-	<span class="o">}</span>
-	
-</code></pre></div>
-
-<blockquote>
-  <p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p>
-</blockquote>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/20140104/java-string-source/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <ul class="pager">
+    
+    <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
     
     <li><a href="/blog/archives">Blog Archives</a></li>
     
@@ -466,11 +439,13 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 </section>
 <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (1)</a></li><li><a href='/blog/categories/notech/'>NoTech (1)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (1)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140111/nonsense/">2014-01-11闲扯</a></li>
 		
 		  <li><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></li>
 		
@@ -479,8 +454,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
 		
 		  <li><a href="/blog/20140105/bash-for-loop-by-example/">bash for循环用法示例</a></li>
-		
-		  <li><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></li>
 		
   	</ul>
 </section>
