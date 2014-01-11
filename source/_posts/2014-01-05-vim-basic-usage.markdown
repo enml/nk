@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "vim 常用的基本操作"
+description: 后台开发中，vim的常用操作和基本用法指南
 date: 2014-01-05 14:52:26 +0800
 comments: true
 tags: linux, vim

@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "MySql优化在项目中的应用"
+description: MySql的一些优化策略在实际项目中的应用分析
 date: 2014-01-07 21:38:18 +0800
 comments: true
 tags: mysql, optimize

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "String.java 源码学习"
-description: source code analysis of String.java in Java API
+description: Java API String.java的主要源码的分析和学习
 date: 2014-01-04 00:27:12 +0800
 comments: true
 tags: source code, String.java 
