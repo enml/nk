@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Bash | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/bash/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:25:14+08:00</updated>
+  <updated>2014-01-11T23:32:08+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -24,69 +24,75 @@
 
 <h4 id="for">1. for循环的第一种形式：</h4>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="k">for </span>variable in 1 2 3 4 5
-<span class="k">do</span>
-<span class="k">    </span><span class="nb">command</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+for variable in 1 2 3 4 5
+do
+    command
+done
+{% endhighlight bash %}
 </code></pre>
 
 <p>示例1：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for </span>i in 1 2 3 4 5
-<span class="k">do</span>
-<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for i in 1 2 3 4 5
+do
+   echo "Welcome $i times"
+done
+{% endhighlight %}
 </code></pre>
 
 <p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
 示例2：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
-<span class="k">do</span>
-<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for i in {1..5}
+do
+   echo "Welcome $i times"
+done
+{% endhighlight %}
 </code></pre>
 
 <!--more-->
 <p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
 示例3：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="nb">echo</span> <span class="s2">&quot;Bash version ${BASH_VERSION}...&quot;</span>
-<span class="k">for </span>i in <span class="o">{</span>0..10..2<span class="o">}</span>
-  <span class="k">do</span>
-<span class="k">     </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+echo "Bash version ${BASH_VERSION}..."
+for i in {0..10..2}
+  do
+     echo "Welcome $i times"
+done
+{% endhighlight %}
 </code></pre>
 
 <p>使用for遍历文件，语法为：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="k">for </span>file in file1 file2 file3 file4
-<span class="k">do</span>
-<span class="k">    </span>commands
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+for file in file1 file2 file3 file4
+do
+    commands
+done
+{% endhighlight %}
 </code></pre>
 
 <p>示例4：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for </span>file in /etc/*
-<span class="k">do</span>
-<span class="k">	if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-		<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-		<span class="nb">break</span>
-<span class="nb">	</span><span class="k">fi</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for file in /etc/*
+do
+	if [ "${file}" == "/etc/resolv.conf" ]
+	then
+		countNameservers=$(grep -c nameserver /etc/resolv.conf)
+		echo "Total  ${countNameservers} nameservers defined in ${file}"
+		break
+	fi
+done
+{% endhighlight %}
 </code></pre>
 
 <p>其中for file in /etc/* 等价于：</p>
@@ -106,57 +112,61 @@ done
 
 <p>示例5：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for</span> <span class="o">((</span> <span class="nv">c</span><span class="o">=</span>1; c&amp;lt;<span class="o">=</span>5; c++ <span class="o">))</span>
-<span class="k">do</span>
-<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $c times&quot;</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for (( c=1; c&lt;=5; c++ ))
+do
+   echo "Welcome $c times"
+done
+{% endhighlight %}
 </code></pre>
 
 <p>当for的EXP1，EXP2，EXP3都为空时，即为无限循环：
 示例6：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for</span> <span class="o">((</span> ; ; <span class="o">))</span>
-<span class="k">do</span>
-<span class="k">   </span><span class="nb">echo</span> <span class="s2">&quot;infinite loops [ hit CTRL+C to stop]&quot;</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for (( ; ; ))
+do
+   echo "infinite loops [ hit CTRL+C to stop]"
+done
+{% endhighlight %}
 </code></pre>
 
 <h4 id="forbreakcontinuec">3. for循环也支持break和continue关键字，与C语言一致</h4>
 <p>示例7：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="k">for </span>file in /etc/*
-<span class="k">do</span>
-<span class="k">	if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-		<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-		<span class="nb">break</span>
-<span class="nb">	</span><span class="k">fi</span>
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+for file in /etc/*
+do
+	if [ "${file}" == "/etc/resolv.conf" ]
+	then
+		countNameservers=$(grep -c nameserver /etc/resolv.conf)
+		echo "Total  ${countNameservers} nameservers defined in ${file}"
+		break
+	fi
+done
+{% endhighlight %}
 </code></pre>
 
 <p>示例8：</p>
 
-<pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
-<span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
-<span class="k">for </span>f in <span class="nv">$FILES</span>
-<span class="k">do</span>
-	<span class="c"># if .bak backup file exists, read next file</span>
-	<span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
-		<span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
-	<span class="k">fi</span>
-	<span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
-	/bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
-<span class="k">done</span>
-</code></pre></div>
+<pre><code>{% highlight bash %}
+#!/bin/bash
+FILES="$@"
+for f in $FILES
+do
+	# if .bak backup file exists, read next file
+	if [ -f ${f}.bak ]
+	then
+		echo "Skiping $f file..."
+		continue  # read next file and skip cp command
+	fi
+	# we are hear means no backup file exists, just use cp command to copy file
+	/bin/cp $f $f.bak
+done
+{% endhighlight %}
 </code></pre>
 
 ]]></content>
