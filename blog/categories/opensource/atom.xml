@@ -4,7 +4,7 @@
   <title><![CDATA[Category: OpenSource | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/opensource/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:32:08+08:00</updated>
+  <updated>2014-01-11T23:41:31+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -19,9 +19,8 @@
     <updated>2014-01-04T00:27:12+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140104/java-string-source</id>
     <content type="html"><![CDATA[<h3 id="section">1. 存储结构</h3>
-<pre><code>{% highlight java %}
-private final char value[];
-{% endhighlight %}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -35,16 +34,15 @@ private final char value[];
 </blockquote>
 
 <h4 id="section-2">2.1</h4>
-<pre><code>{% highlight java %}
-public String() {
-	this.value = new char[0];
-}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+<span class="o">}</span>
 
-public String(String original) {
-	this.value = original.value;
-	this.hash = original.hash;
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -53,21 +51,20 @@ public String(String original) {
 
 <!--more-->
 <p>#### 2.2
-	{% highlight java %}
-	public String(char value[]) {
-		this.value = Arrays.copyOf(value, value.length);
-	}</p>
+	<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+	<span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 
-<pre><code>public String(StringBuffer buffer) {
-	synchronized(buffer) {
-		this.value = Arrays.copyOf(buffer.getValue(), buffer.length());
-	}
-}
+<span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="n">String</span><span class="o">(</span><span class="n">StringBuffer</span> <span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
+	<span class="kd">synchronized</span><span class="o">(</span><span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">buffer</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
+	<span class="o">}</span>
+<span class="o">}</span>
 
-public String(StringBuilder builder) {
-	this.value = Arrays.copyOf(builder.getValue(), builder.builder.length());
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuilder</span> <span class="n">builder</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">builder</span><span class="o">.</span><span class="na">builder</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -75,23 +72,22 @@ public String(StringBuilder builder) {
 </blockquote>
 
 <h4 id="section-3">2.3</h4>
-<pre><code>{% highlight java %}
-public String(byte bytes[]) {
-	this(bytes, 0, bytes.length);
-}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
+	<span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="o">}</span>
 
-public String(byte bytes[], int offset, int length) {
-	checkBounds(bytes, offset, length);
-	this.value = StringCoding.decode(bytes, offset, length);
-}
+<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+<span class="o">}</span>
 
-public String(byte bytes[], int offset, int length, Charset charset) {
-	if (charset == null)
-		throw new NullPointerException("charset");
-	checkBounds(bytes, offset, length);
-	this.value = StringCoding.decode(charset, bytes, offset, length);
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">,</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">charset</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+		<span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">&quot;charset&quot;</span><span class="o">);</span>
+	<span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+	<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">charset</span><span class="o">,</span> <span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -100,22 +96,21 @@ public String(byte bytes[], int offset, int length, Charset charset) {
 
 <h3 id="section-4">3. 常用函数</h3>
 <p>#### 3.1
-	{% highlight java %}
-	public int length() {
-		return value.length;
-	}</p>
+	<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+	<span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 
-<pre><code>public boolean isEmpty() {
-	return value.length == 0;
-}
+<span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kt">boolean</span> <span class="n">isEmpty</span><span class="o">()</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
+<span class="o">}</span>
 
-public char charAt(int index) {
-	if ((index &lt; 0) || (index &gt;= value.length)) {
-		throw new StringIndexOutOfBoundsException(index);
-	}
-	return value[index];
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="kt">char</span> <span class="nf">charAt</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">if</span> <span class="o">((</span><span class="n">index</span> <span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="n">index</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">))</span> <span class="o">{</span>
+		<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
+	<span class="o">}</span>
+	<span class="k">return</span> <span class="n">value</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -123,24 +118,23 @@ public char charAt(int index) {
 </blockquote>
 
 <h4 id="section-5">3.2</h4>
-<pre><code>{% highlight java %}
-public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {
-	if (srcBegin &lt; 0) {
-		throw new StringIndexOutOfBoundsException(srcBegin);
-	}
-	if (srcEnd &gt; value.length) {
-		throw new StringIndexOutOfBoundsException(srcEnd);
-	}
-	if (srcBegin &gt; srcEnd) {
-		throw new StringIndexOutOfBoundsException(srcEnd - srcBegin);
-	}
-	System.arraycopy(value, 0, dst, dstBegin, value.length);
-}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcBegin</span><span class="o">);</span>
+	<span class="o">}</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">srcEnd</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span><span class="o">);</span>
+	<span class="o">}</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">srcEnd</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span> <span class="o">-</span> <span class="n">srcBegin</span><span class="o">);</span>
+	<span class="o">}</span>
+	<span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">dst</span><span class="o">,</span> <span class="n">dstBegin</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="o">}</span>
 
-public byte[] getBytes(){
-	return StringCoding.encode(value, 0, value.length);
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBytes</span><span class="o">(){</span>
+	<span class="k">return</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -148,36 +142,35 @@ public byte[] getBytes(){
 </blockquote>
 
 <h4 id="section-6">3.3</h4>
-<pre><code>{% highlight java %}
-public boolean equals(Object anObject) {
-	if (this == anObject) {
-		return true;
-	}
-	if (anObject instanceOf String) {
-		String anotherString = (String) anObject;
-		int n = value.length;
-		if (n == anotherString.value.length) {
-			char v1[] = value;
-			char v2[] =  anotherString.value;
-			int i = 0;
-			while (n-- &gt; 0) {}
-				if (v1[i] != v2[i])
-					return false;
-				i++;
-			}
-			return true;
-		}
-	}
-	return false;
-}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+	<span class="o">}</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">anObject</span> <span class="n">instanceOf</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">String</span> <span class="n">anotherString</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">anObject</span><span class="o">;</span>
+		<span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+		<span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
+			<span class="kt">char</span> <span class="n">v1</span><span class="o">[]</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+			<span class="kt">char</span> <span class="n">v2</span><span class="o">[]</span> <span class="o">=</span>  <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+			<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+			<span class="k">while</span> <span class="o">(</span><span class="n">n</span><span class="o">--</span> <span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{}</span>
+				<span class="k">if</span> <span class="o">(</span><span class="n">v1</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">v2</span><span class="o">[</span><span class="n">i</span><span class="o">])</span>
+					<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+				<span class="n">i</span><span class="o">++;</span>
+			<span class="o">}</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+	<span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+<span class="o">}</span>
 
-public boolean equalsIgnoreCase(String anotherString) {
-	return (this == anotherString) ? true
-		: (anotherString != null) &amp;&amp; 
-		(anotherString.value.length == value.length) &amp;&amp; 
-		regionMatches(true, 0, anotherString, 0, value.length);
-}
-{% endhighlight %}
+<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equalsIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">?</span> <span class="kc">true</span>
+		<span class="o">:</span> <span class="o">(</span><span class="n">anotherString</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> 
+		<span class="o">(</span><span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> 
+		<span class="n">regionMatches</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">anotherString</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>
@@ -185,11 +178,10 @@ public boolean equalsIgnoreCase(String anotherString) {
 </blockquote>
 
 <h4 id="section-7">3.4</h4>
-<pre><code>{% highlight java %}
-public int compareToIgnoreCase(String str) {
-	return CASE_INSENSITIVE_ORDER.compare(this, str);
-}
-{% endhighlight %}
+<pre><code><div class="highlight"><pre><code class="java"><span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+	<span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <blockquote>

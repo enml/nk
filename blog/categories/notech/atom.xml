@@ -4,7 +4,7 @@
   <title><![CDATA[Category: NoTech | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/notech/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:32:08+08:00</updated>
+  <updated>2014-01-11T23:41:31+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[2014-01-11闲扯]]></title>
+    <title type="html"><![CDATA[2014-01-11 插曲]]></title>
     <link href="http://nkcoder.github.io/blog/20140111/nonsense/"/>
     <updated>2014-01-11T23:13:35+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140111/nonsense</id>
@@ -27,29 +27,28 @@
 
 <p>其实今天做code review的时候，就有一个小问题被我发现了：通过PreparedStatement的executeBatch()方法，批处理向数据库插入数据，示例代码如下：</p>
 
-<pre><code>{% highlight java %}
-Connection conn = null;
-PreparedStatement statement = null;
-try {
-	conn = database.getConnection();
-	statement = conn.prepareStatment(SQL_INSERT);
-	int i = 0;
-	for (VideoInfo info: videoInfoList) {
-		statement.setInt(1, info.getVid());
-		statement.setString(2, info.getTvName());
-		// ...
+<pre><code><div class="highlight"><pre><code class="java"><span class="n">Connection</span> <span class="n">conn</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="n">PreparedStatement</span> <span class="n">statement</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="k">try</span> <span class="o">{</span>
+	<span class="n">conn</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="na">getConnection</span><span class="o">();</span>
+	<span class="n">statement</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="na">prepareStatment</span><span class="o">(</span><span class="n">SQL_INSERT</span><span class="o">);</span>
+	<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+	<span class="k">for</span> <span class="o">(</span><span class="n">VideoInfo</span> <span class="nl">info:</span> <span class="n">videoInfoList</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">statement</span><span class="o">.</span><span class="na">setInt</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getVid</span><span class="o">());</span>
+		<span class="n">statement</span><span class="o">.</span><span class="na">setString</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getTvName</span><span class="o">());</span>
+		<span class="c1">// ...</span>
 
-		if ((i + 1) % 50 == 0) {
-			statement.executeBatch();
-		}
-	}
-	statemetn.executeBatch();
-} catch (// ...) {
-	//	...
-} finally {
-	// ...
-}
-{% endhighlight %}
+		<span class="k">if</span> <span class="o">((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">statement</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
+		<span class="o">}</span>
+	<span class="o">}</span>
+	<span class="n">statemetn</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
+<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="c1">// ...) {</span>
+	<span class="c1">//	...</span>
+<span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+	<span class="c1">// ...</span>
+<span class="o">}</span>
+</code></pre></div>
 </code></pre>
 
 <p>讲解到这段代码时，我试探性地问，有没有加入批处理的操作，主管一看，哦，对，写漏了一句：statement.addBatch();赶紧补上，我们相视一笑。其实，我还从来没在代码里是用过mysql的批处理api，我之所以会有疑问，是因为我在学习<a href="http://www.elasticsearch.org/">ElasticSearch</a>的时候，使用过其批量导数据的接口，和上述代码如出一辙，这也让我感叹，很多知识都是相通的，在一些好的方面，也是相互借鉴的。这也让我坚信，知识的广度是多么地重要。</p>
@@ -168,9 +167,8 @@ disqus_show_comment_count: yes  &gt;注意：将nkcoder替换为你的disqus帐�
 
 <p>在需要高亮的代码块使用语法：</p>
 
-<pre><code>{% highlight java %}
-your code
-{% endhighlight %}
+<pre><code><div class="highlight"><pre><code class="java"><span class="n">your</span> <span class="n">code</span>
+</code></pre></div>
 </code></pre>
 
 <p>或者使用三个反引号（左Alt键右边的键)：</p>
@@ -212,7 +210,7 @@ your code
 
 <pre><code>&lt;section&gt;
 	&lt;h4&gt; Recent Comments &lt;/h4&gt;
-	&lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/{{ site.disqus_short_name }}/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
+	&lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
 
