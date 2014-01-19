@@ -7,6 +7,7 @@ comments: true
 tags: linux, bash
 categories: Bash
 ---
+
 >来源：[Bash For Loop Examples](http://www.cyberciti.biz/faq/bash-for-loop/)  编译：lingguo
 
 #### 1. for循环的第一种形式：
@@ -40,6 +41,7 @@ categories: Bash
     {% endhighlight %}
 
 <!--more-->
+
 bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
 示例3：
 
@@ -84,6 +86,7 @@ bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..e
  
 
 ####2. for循环的第二种形式：
+
 与C语言for循环类似的语法：
 
 	for (( EXP1; EXP2; EXP3 ))
@@ -115,6 +118,7 @@ bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..e
  
 
 #### 3. for循环也支持break和continue关键字，与C语言一致
+
 示例7：
 
     {% highlight bash %}

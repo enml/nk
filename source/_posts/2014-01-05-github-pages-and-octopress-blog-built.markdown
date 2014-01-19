@@ -6,14 +6,18 @@ comments: true
 tags: Octopress, github pages
 categories: NoTech 
 ---
+
 >初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。
 
 ### 1. 环境准备
+
 #### 1.1 下载软件：`RubyInstaller`，`Devkit`，`git`
+
 先在下载地址[rubyinstaller](http://rubyinstaller.org/downloads/)看说明，当前建议下载1.9.3稳定版`RubyInstaller`：`Ruby 1.9.3-p484`和`DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe`。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
 git可以下载最新版的[msysgit](https://code.google.com/p/msysgit/downloads/list)即可。
 
 #### 1.2 安装ruby
+
 安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：
 
 	$ cd Devkit
@@ -21,7 +25,9 @@ git可以下载最新版的[msysgit](https://code.google.com/p/msysgit/downloads
    	$ ruby dk.rb install	
 
 <!--more-->
+
 #### 1.3 安装Octopress
+
 默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：
 
 	$ gem sources -a http://ruby.taobao.org
@@ -42,6 +48,7 @@ git可以下载最新版的[msysgit](https://code.google.com/p/msysgit/downloads
 	$ bundle install
 
 #### 1.5 安装主题，生成博客并预览
+
 Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap theme](https://github.com/bkutil/bootstrap-theme)：
 
 	$ git clone git://github.com/bkutil/bootstrap-theme.git bootstrap-theme
@@ -52,11 +59,14 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 >访问[http://localhost:4000](http://localhost:4000)即可预览。
 
 #### 1.6 修改环境变量支持中文
+
 新建环境变量：LANG 和 LC_ALL，值均为zh_CN.UTF_8
 
 
 ### 2. 托管到github pages
+
 #### 2.1 新建github repo
+
 在[github](http://github.com)新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。
 	
 #### 2.2 github配置
@@ -90,6 +100,7 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 
 
 ### 4. 主题优化
+
 #### 4.1 添加disqus评论
 先去[disqus](http://disqus.com/)注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：
 
@@ -99,6 +110,7 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 >注意：将nkcoder替换为你的disqus帐号。
 
 #### 4.2 代码高亮
+
 首先下载安装python 2.x版本，然后修改_config.yml，修改为：
 
 	pygments: true
@@ -116,6 +128,7 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 	your code
 	```
 #### 4.3. 在页面右侧添加分类等模块
+
 系统自带的模块放在了目录：source/_include/asides下，我们自定义的模块放在目录：source/_include/custom/asides下。
 模块一：分类及标签
 使用插件[octopress-category-list](https://github.com/ctdk/octopress-category-list)
@@ -160,6 +173,7 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 >根据包含的顺序，自上向下地展示。
 
 #### 4.4 显示摘要
+
 在文章中的某一行添加如下代码即可：
 
 	<!--more-->
@@ -167,13 +181,16 @@ Octopress的[主题列表](http://opthemes.com/)，我使用的是：[Bootstrap 
 
 
 ### 5. 不同环境下博客的同步
+
 如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。
 
 #### 5.1 分支的概念
+
 Octopress默认有两个分支，一个是source，包含生成博客的所有文件，另一个是master，即博客本身。
 当我们本地配置完后，master分支在目录_deploy中，因为以下划线开头，当我们向source分支提交时$ git push -u origin source时，master分支被忽略，而当我们使用rake部署时$ rake deploy，master分支则更新。
 
 #### 5.2 将博客拷贝到本地的步骤
+
 首先将source分支拷贝到本地的博客目录：
 
 	$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
@@ -196,6 +213,7 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 	(For example, 'git@github.com:nkcoder/nkcoder.github.com)
 
 #### 5.3 不同环境的同步
+
 在切换环境之前，确保对所做的修改都提交了：
 
 	$ ranke generate
@@ -211,7 +229,7 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 	$ cd ./_deploy
 	$ git pull origin master
 
-参考博文：（非常感谢）
+#### 参考博文：（非常感谢）
 
 + [Clone Your Octopress to Blog From Two Places](http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/)
 + [Recent Comments in Octopress](http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/)

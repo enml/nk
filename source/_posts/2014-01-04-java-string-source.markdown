@@ -7,7 +7,9 @@ comments: true
 tags: source code, String.java 
 categories: OpenSource
 ---
+
 ### 1. 存储结构
+
 	{% highlight java %}
     private final char value[];
 	{% endhighlight %}
@@ -18,7 +20,8 @@ categories: OpenSource
 
 >String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。
 
-#### 2.1
+#### 2.1 第一类
+
 	{% highlight java %}
 	public String() {
 		this.value = new char[0];
@@ -33,7 +36,9 @@ categories: OpenSource
 >备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。
 
 <!--more-->
-#### 2.2
+
+#### 2.2 第二类
+
 	{% highlight java %}
 	public String(char value[]) {
 		this.value = Arrays.copyOf(value, value.length);
@@ -52,7 +57,8 @@ categories: OpenSource
 
 >备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。
 
-#### 2.3
+#### 2.3 第三类
+
 	{% highlight java %}
 	public String(byte bytes[]) {
 		this(bytes, 0, bytes.length);
@@ -74,7 +80,9 @@ categories: OpenSource
 >备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。
 
 ### 3. 常用函数
-#### 3.1
+
+#### 3.1 第一类
+
 	{% highlight java %}
 	public int length() {
 		return value.length;
@@ -94,7 +102,8 @@ categories: OpenSource
 
 >备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。
 
-#### 3.2
+#### 3.2 第二类
+
 	{% highlight java %}
 	public void getChars(int srcBegin, int srcEnd, char dst[], int dstBegin) {
 		if (srcBegin < 0) {
@@ -116,7 +125,8 @@ categories: OpenSource
 
 >备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。
 
-#### 3.3
+#### 3.3 第三类
+
 	{% highlight java %}
 	public boolean equals(Object anObject) {
 		if (this == anObject) {
@@ -150,7 +160,8 @@ categories: OpenSource
 
 >备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。
 
-#### 3.4
+#### 3.4 第四类
+
 	{% highlight java %}
 	public int compareToIgnoreCase(String str) {
 		return CASE_INSENSITIVE_ORDER.compare(this, str);
