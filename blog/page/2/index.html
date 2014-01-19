@@ -109,6 +109,84 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/20140105/bash-for-loop-by-example/">Bash For循环用法示例</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-05T14:36:30+08:00" pubdate data-updated="true">Jan 5<span>th</span>, 2014</time>
+        
+         | <a href="/blog/20140105/bash-for-loop-by-example/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
+
+<h4>1. for循环的第一种形式：</h4>
+
+<div class="highlight"><pre><code class="bash">    <span class="k">for </span>variable in 1 2 3 4 5
+    <span class="k">do</span>
+<span class="k">        </span><span class="nb">command</span>
+<span class="nb">    </span><span class="k">done</span>
+    
+</code></pre></div>
+
+
+<p>示例1：</p>
+
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in 1 2 3 4 5
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
+<p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
+示例2：</p>
+
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
+
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/20140105/bash-for-loop-by-example/">Continue Reading &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></h1>
     
     
@@ -134,38 +212,34 @@
   </header>
 
 
-  <div class="entry-content"><h3 id="section">1. 存储结构</h3>
+  <div class="entry-content"><h3>1. 存储结构</h3>
 
 <div class="highlight"><pre><code class="java">    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-	
+    
 </code></pre></div>
 
-<blockquote>
-  <p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p>
-</blockquote>
 
-<h3 id="section-1">2. 构造函数</h3>
+<blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
 
-<blockquote>
-  <p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p>
-</blockquote>
+<h3>2. 构造函数</h3>
 
-<h4 id="section-2">2.1</h4>
+<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
 
-<div class="highlight"><pre><code class="java">	<span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-	<span class="o">}</span>
+<h4>2.1 第一类</h4>
 
-	<span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-		<span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-	<span class="o">}</span>
-	
+<div class="highlight"><pre><code class="java"> <span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
+    <span class="o">}</span>
+    
 </code></pre></div>
 
-<blockquote>
-  <p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p>
-</blockquote>
+
+<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
 
 </div>
   
@@ -200,21 +274,21 @@
 </section>
 <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (1)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
 		
+		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
+		
 		  <li><a href="/blog/20140111/nonsense/">2014-01-11 插曲</a></li>
 		
-		  <li><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></li>
+		  <li><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化在项目中的应用</a></li>
 		
 		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
 		
 		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
-		
-		  <li><a href="/blog/20140105/bash-for-loop-by-example/">bash for循环用法示例</a></li>
 		
   	</ul>
 </section>

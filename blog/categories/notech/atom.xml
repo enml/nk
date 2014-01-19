@@ -4,7 +4,7 @@
   <title><![CDATA[Category: NoTech | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/notech/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:41:31+08:00</updated>
+  <updated>2014-01-19T21:34:53+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -23,6 +23,8 @@
 <p>早上也没什么异常报警，照例看看系统的各个页面以及日志是否正常。当看到频道页的一个榜单时，感觉不对劲，我立马知道问题处在哪儿了。这是前两天产品提的一个需求，需要前端和后台配合，我开发完了，将文件推送到cms的测试目录，将测试地址给了产品经理；然后，前端找产品经理要文件地址，产品经理把测试地址给了前端，后来前端说，她是找产品要的地址，调试完了直接上线了（引用的测试地址，因为线上的文件是当天生成的，而测试地址的是旧文件），关键是她上线时候，至少应该通知我或者产品一声的，而且我给的地址里明显含有test关键字，于是我就很郁闷。大周末的，谁都找不着，产品说周一再说吧。但排行榜是我的系统，出问题，我是首当其冲。跟我主管知会了一下，他也很郁闷，没办法，我只能默默地将系统上线，更新文件，然后推送到测试地址，以保证系统的展示是正常的。开发、产品和前端如果沟通不好，真的很容易出问题，有了这次的教训，以后不能单线和前端或者产品沟通，必须大家都在，把问题说清楚。</p>
 
 <!--more-->
+
+
 <p>中午找个地方吃完饭，去公司加班了，还有点活。到公司一看，发现Xi Chen也在，每一会儿，主管也来了，好么，今天是组内加班聚会么。下午快要下班的时候，主管要上线个系统，让我帮忙做个code review（此时Xi Chen提前撤了），当然ok。其实所谓code review，就是听开发者在代码级讲解一遍系统的逻辑、功能和实现，主要是check一下逻辑是否严密，是否有没有考虑到的问题，或者由于粗心将代码写串了等编码问题。我觉得code review 还是很有必要的，开发者在开发的过程中，或者由于系统功能较复杂，或者由于编码周期比较长，代码量较大，容易遗漏问题。通过将思路和逻辑讲给同事听（也许他不一定对系统多么熟悉），相当于捋一遍思路，有的时候自己就能发现，噢，原来这个地方还有个问题没有考虑到呢；另一方面，同事也可以根据自己的理解和经验提出疑问，通过解答疑问，使得逻辑更加严密。</p>
 
 <p>其实今天做code review的时候，就有一个小问题被我发现了：通过PreparedStatement的executeBatch()方法，批处理向数据库插入数据，示例代码如下：</p>
@@ -30,29 +32,28 @@
 <pre><code><div class="highlight"><pre><code class="java"><span class="n">Connection</span> <span class="n">conn</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
 <span class="n">PreparedStatement</span> <span class="n">statement</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
 <span class="k">try</span> <span class="o">{</span>
-	<span class="n">conn</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="na">getConnection</span><span class="o">();</span>
-	<span class="n">statement</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="na">prepareStatment</span><span class="o">(</span><span class="n">SQL_INSERT</span><span class="o">);</span>
-	<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-	<span class="k">for</span> <span class="o">(</span><span class="n">VideoInfo</span> <span class="nl">info:</span> <span class="n">videoInfoList</span><span class="o">)</span> <span class="o">{</span>
-		<span class="n">statement</span><span class="o">.</span><span class="na">setInt</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getVid</span><span class="o">());</span>
-		<span class="n">statement</span><span class="o">.</span><span class="na">setString</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getTvName</span><span class="o">());</span>
-		<span class="c1">// ...</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="na">getConnection</span><span class="o">();</span>
+    <span class="n">statement</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="na">prepareStatment</span><span class="o">(</span><span class="n">SQL_INSERT</span><span class="o">);</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">VideoInfo</span> <span class="nl">info:</span> <span class="n">videoInfoList</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">statement</span><span class="o">.</span><span class="na">setInt</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getVid</span><span class="o">());</span>
+        <span class="n">statement</span><span class="o">.</span><span class="na">setString</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">getTvName</span><span class="o">());</span>
+        <span class="c1">// ...</span>
 
-		<span class="k">if</span> <span class="o">((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-			<span class="n">statement</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
-		<span class="o">}</span>
-	<span class="o">}</span>
-	<span class="n">statemetn</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="o">)</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">statement</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="n">statemetn</span><span class="o">.</span><span class="na">executeBatch</span><span class="o">();</span>
 <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="c1">// ...) {</span>
-	<span class="c1">//	...</span>
+    <span class="c1">//  ...</span>
 <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-	<span class="c1">// ...</span>
+    <span class="c1">// ...</span>
 <span class="o">}</span>
 </code></pre></div>
 </code></pre>
 
 <p>讲解到这段代码时，我试探性地问，有没有加入批处理的操作，主管一看，哦，对，写漏了一句：statement.addBatch();赶紧补上，我们相视一笑。其实，我还从来没在代码里是用过mysql的批处理api，我之所以会有疑问，是因为我在学习<a href="http://www.elasticsearch.org/">ElasticSearch</a>的时候，使用过其批量导数据的接口，和上述代码如出一辙，这也让我感叹，很多知识都是相通的，在一些好的方面，也是相互借鉴的。这也让我坚信，知识的广度是多么地重要。</p>
-
 ]]></content>
   </entry>
   
@@ -61,26 +62,30 @@
     <link href="http://nkcoder.github.io/blog/20140105/github-pages-and-octopress-blog-built/"/>
     <updated>2014-01-05T22:07:11+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140105/github-pages-and-octopress-blog-built</id>
-    <content type="html"><![CDATA[<blockquote>
-  <p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p>
-</blockquote>
+    <content type="html"><![CDATA[<blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
 
-<h3 id="section">1. 环境准备</h3>
-<p>#### 1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code>
-先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
+<h3>1. 环境准备</h3>
+
+<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
+
+<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
 git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
 
-<h4 id="ruby">1.2 安装ruby</h4>
+<h4>1.2 安装ruby</h4>
+
 <p>安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
 
 <pre><code>$ cd Devkit
 $ ruby dk.rb init
-   	$ ruby dk.rb install	
+$ ruby dk.rb install    
 </code></pre>
 
 <!--more-->
-<p>#### 1.3 安装Octopress
-默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
+
+
+<h4>1.3 安装Octopress</h4>
+
+<p>默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
 
 <pre><code>$ gem sources -a http://ruby.taobao.org
 $ gem sources -r http://rubygems.org
@@ -97,36 +102,44 @@ $ gem sources -l
 <pre><code>source "http://ruby.taobao.org"
 </code></pre>
 
-<h4 id="bundler">1.4 安装bundler</h4>
+<h4>1.4 安装bundler</h4>
 
 <pre><code>$ gem install bundler
 $ bundle install
 </code></pre>
 
-<h4 id="section-1">1.5 安装主题，生成博客并预览</h4>
+<h4>1.5 安装主题，生成博客并预览</h4>
+
 <p>Octopress的<a href="http://opthemes.com/">主题列表</a>，我使用的是：<a href="https://github.com/bkutil/bootstrap-theme">Bootstrap theme</a>：</p>
 
 <pre><code>$ git clone git://github.com/bkutil/bootstrap-theme.git bootstrap-theme
 $ cp -R bootstrap-theme $MY_OCTOBLOG/.themes/bootstrap
 $ rake install['bootstrap']
 $ rake generate
-$ rake preview &gt;访问[http://localhost:4000](http://localhost:4000)即可预览。
+$ rake preview
 </code></pre>
 
-<h4 id="section-2">1.6 修改环境变量支持中文</h4>
+<blockquote><p>访问<a href="http://localhost:4000">http://localhost:4000</a>即可预览。</p></blockquote>
+
+<h4>1.6 修改环境变量支持中文</h4>
+
 <p>新建环境变量：LANG 和 LC_ALL，值均为zh_CN.UTF_8</p>
 
-<h3 id="github-pages">2. 托管到github pages</h3>
-<p>#### 2.1 新建github repo
-在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
+<h3>2. 托管到github pages</h3>
 
-<h4 id="github">2.2 github配置</h4>
+<h4>2.1 新建github repo</h4>
+
+<p>在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
+
+<h4>2.2 github配置</h4>
 
 <pre><code>$ git config --global user.name "nkcoder"
 $ git config --global user.email "daniel5hbs@gmail.com"
 $ git config --global credential.helper cache
-$ git config --global credential.helper 'cache --timeout=3600' &gt;注意：credential helper 只对https有效，对ssh无效。
+$ git config --global credential.helper 'cache --timeout=3600'
 </code></pre>
+
+<blockquote><p>注意：credential helper 只对https有效，对ssh无效。</p></blockquote>
 
 <p>生成rsa key，并添加到github的SSH keys中：</p>
 
@@ -134,7 +147,7 @@ $ git config --global credential.helper 'cache --timeout=3600' &gt;注意：cred
 $ ssh -T git@github.com
 </code></pre>
 
-<h4 id="section-3">2.3 博客发布</h4>
+<h4>2.3 博客发布</h4>
 
 <pre><code>$ rake setup_github_pages
 $ rake generate
@@ -142,28 +155,37 @@ $ rake deploy
 访问nkcoder.github.io。
 </code></pre>
 
-<h3 id="section-4">3. 新建博客或页面</h3>
+<h3>3. 新建博客或页面</h3>
 
 <pre><code>$ rake new_post['first-blog']
 $ rake new_page['about']
 $ rake generate
-$ rake preview  &gt;说明：使用`$ rake preview`可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新`$ rake generate`。
+$ rake preview 
 </code></pre>
 
-<h3 id="section-5">4. 主题优化</h3>
-<p>#### 4.1 添加disqus评论
-先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
+<blockquote><p>说明：使用<code>$ rake preview</code>可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新<code>$ rake generate</code>。</p></blockquote>
+
+<h3>4. 主题优化</h3>
+
+<h4>4.1 添加disqus评论</h4>
+
+<p>先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
 
 <pre><code># Disqus Comments
 disqus_short_name: nkcoder
-disqus_show_comment_count: yes  &gt;注意：将nkcoder替换为你的disqus帐号。
+disqus_show_comment_count: yes 
 </code></pre>
 
-<h4 id="section-6">4.2 代码高亮</h4>
+<blockquote><p>注意：将nkcoder替换为你的disqus帐号。</p></blockquote>
+
+<h4>4.2 代码高亮</h4>
+
 <p>首先下载安装python 2.x版本，然后修改_config.yml，修改为：</p>
 
-<pre><code>pygments: true &gt;注意冒号后有个空格。
+<pre><code>pygments: true
 </code></pre>
+
+<blockquote><p>注意冒号后有个空格。</p></blockquote>
 
 <p>在需要高亮的代码块使用语法：</p>
 
@@ -175,8 +197,15 @@ disqus_show_comment_count: yes  &gt;注意：将nkcoder替换为你的disqus帐�
 
 <pre><code>```java
 your code
-``` #### 4.3. 在页面右侧添加分类等模块 系统自带的模块放在了目录：source/_include/asides下，我们自定义的模块放在目录：source/_include/custom/asides下。 模块一：分类及标签 使用插件[octopress-category-list](https://github.com/ctdk/octopress-category-list) 下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；
+```
 </code></pre>
+
+<h4>4.3. 在页面右侧添加分类等模块</h4>
+
+<p>系统自带的模块放在了目录：source/<em>include/asides下，我们自定义的模块放在目录：source/</em>include/custom/asides下。
+模块一：分类及标签
+使用插件<a href="https://github.com/ctdk/octopress-category-list">octopress-category-list</a>
+下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；</p>
 
 <p>模块二：最新博文
 这是系统默认的模块，在source/_include/asides目录下的recent_posts.html，样式可以自己修改；</p>
@@ -185,12 +214,12 @@ your code
 在source/_include/custom/asides目录下新建blogroll.html，比如内容可以为：</p>
 
 <pre><code>&lt;section&gt;
-	&lt;h4&gt; Blogroll &lt;/h4&gt;
-	&lt;ul&gt;
-		&lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
-		&lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
-		&lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
-	&lt;/ul&gt;
+    &lt;h4&gt; Blogroll &lt;/h4&gt;
+    &lt;ul&gt;
+        &lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
 &lt;/section&gt;
 </code></pre>
 
@@ -198,10 +227,10 @@ your code
 新建douban.html，进入<a href="http://www.douban.com/service/badgemakerjs">豆瓣收藏秀</a>生成js代码，将内容写入douban.html中，如：</p>
 
 <pre><code>&lt;section&gt;
-	&lt;h4&gt; Want To Read&lt;/h4&gt;
-	&lt;div&gt;
-	&lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
-	&lt;/div&gt;
+    &lt;h4&gt; Want To Read&lt;/h4&gt;
+    &lt;div&gt;
+    &lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
+    &lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
 
@@ -209,34 +238,44 @@ your code
 新建模块文件：recent_comments.html，写入disqus的js代码，如：</p>
 
 <pre><code>&lt;section&gt;
-	&lt;h4&gt; Recent Comments &lt;/h4&gt;
-	&lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
+    &lt;h4&gt; Recent Comments &lt;/h4&gt;
+    &lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
 &lt;/section&gt;
 </code></pre>
 
 <p>然后修改_config.yml文件，将需要在侧边显示的模块包含在default_asides里，如：</p>
 
-<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html] &gt;根据包含的顺序，自上向下地展示。
+<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html]
 </code></pre>
 
-<h4 id="section-7">4.4 显示摘要</h4>
+<blockquote><p>根据包含的顺序，自上向下地展示。</p></blockquote>
+
+<h4>4.4 显示摘要</h4>
+
 <p>在文章中的某一行添加如下代码即可：</p>
 
-<pre><code>&lt;!--more--&gt; 页面显示“Read on-&gt;"， 剩下的内容会隐藏。
+<pre><code>&lt;!--more--&gt;
 </code></pre>
 
-<h3 id="section-8">5. 不同环境下博客的同步</h3>
+<p>页面显示“Read on->&ldquo;， 剩下的内容会隐藏。</p>
+
+<h3>5. 不同环境下博客的同步</h3>
+
 <p>如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。</p>
 
-<h4 id="section-9">5.1 分支的概念</h4>
+<h4>5.1 分支的概念</h4>
+
 <p>Octopress默认有两个分支，一个是source，包含生成博客的所有文件，另一个是master，即博客本身。
 当我们本地配置完后，master分支在目录_deploy中，因为以下划线开头，当我们向source分支提交时$ git push -u origin source时，master分支被忽略，而当我们使用rake部署时$ rake deploy，master分支则更新。</p>
 
-<h4 id="section-10">5.2 将博客拷贝到本地的步骤</h4>
+<h4>5.2 将博客拷贝到本地的步骤</h4>
+
 <p>首先将source分支拷贝到本地的博客目录：</p>
 
-<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp &gt;将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。
+<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
 </code></pre>
+
+<blockquote><p>将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。</p></blockquote>
 
 <p>然后，将master分支拷贝到_deploy目录：</p>
 
@@ -257,7 +296,8 @@ $ rake setup_github_pages
 (For example, 'git@github.com:nkcoder/nkcoder.github.com)
 </code></pre>
 
-<h4 id="section-11">5.3 不同环境的同步</h4>
+<h4>5.3 不同环境的同步</h4>
+
 <p>在切换环境之前，确保对所做的修改都提交了：</p>
 
 <pre><code>$ ranke generate
@@ -274,14 +314,15 @@ $ cd ./_deploy
 $ git pull origin master
 </code></pre>
 
-<p>参考博文：（非常感谢）</p>
+<h4>参考博文：（非常感谢）</h4>
 
 <ul>
-  <li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
-  <li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
-  <li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
-  <li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
+<li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
+<li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
+<li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
+<li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
 </ul>
+
 ]]></content>
   </entry>
   

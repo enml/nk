@@ -4,7 +4,7 @@
   <title><![CDATA[Category: MySql | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/mysql/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:41:31+08:00</updated>
+  <updated>2014-01-19T21:34:53+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,45 +14,263 @@
 
   
   <entry>
+    <title type="html"><![CDATA[MySql用法日积月累系列一]]></title>
+    <link href="http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one/"/>
+    <updated>2014-01-19T19:38:59+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one</id>
+    <content type="html"><![CDATA[<h3>1. 尽量不要使用select *</h3>
+
+<p>返回表中的所有field时，使用<code>select *</code>确实很方便，但是不推荐这么做，应该在select后将所有的field都列出来：一是方便自己，清楚地知道返回了哪些field；而是方便他人，在看你的代码时，别人不一定知道表中有哪些列。
+这两种方式的性能是一样的。</p>
+
+<h3>2. 尽量使用as创建易读的别名</h3>
+
+<h4>2.1 尽量使用易读的别名</h4>
+
+<pre><code>mysql&gt; select sal as salary, empName as employName from employ;
+</code></pre>
+
+<blockquote><p>使用易读的别名，可以让你的sql语句更容易被理解。</p></blockquote>
+
+<h4>2.2 在where中使用别名：</h4>
+
+<pre><code>mysql&gt; select sal as salary from employ where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>该语句报错，因为salary字段未识别，可以将该语句包装成一个临时表：</p></blockquote>
+
+<pre><code>mysql&gt; select * from (select sal as salary from employ) as t where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>为什么：因为where语句在select之前执行，所以在第一条语句中，salary还没有创建；而from语句在where语句之前执行，所以在第二条语句中，临时表t中有字段salary。</p></blockquote>
+
+<!--more-->
+
+
+<h3>3. 使用concat函数进行字段值的连接</h3>
+
+<p>将字段值和字符串拼接起来，使用<code>concat()</code>函数：</p>
+
+<pre><code>mysql&gt; select concat(startIp, " : ", endIp) as ipSeg from ip_data limit 1;
++---------------------+
+| ipSeg               |
++---------------------+
+| 17563648 : 17825791 | 
++---------------------+
+</code></pre>
+
+<h3>4. 使用case when进行条件判断</h3>
+
+<p>在select语句中，可以对返回结果进行逻辑处理。使用case表达式，语法格式如下。else可以省略，如果所有的when
+都不匹配，默认返回null；</p>
+
+<pre><code>case
+    when ... then
+    when ... then
+    else ...
+end
+</code></pre>
+
+<blockquote><p>注意，还有一个case表达式，用于存储过程，以<code>end case</code>结尾。</p></blockquote>
+
+<pre><code>mysql&gt; select netId, areaId, case when netId &gt; 10 then 'big' when netId &lt; 5 then 'small' else 'normal' end as status from ip_data limit 5;
++-------+--------+--------+
+| netId | areaId | status |
++-------+--------+--------+
+|    11 |   4019 | big    | 
+|     2 |   2813 | small  | 
+|    10 |     35 | normal | 
+|     1 |   2110 | small  | 
+|    10 |     35 | normal | 
++-------+--------+--------+
+</code></pre>
+
+<h3>5. 使用rand返回随机的记录</h3>
+
+<p>可以使用<code>rand()</code>函数返回一个随机数，通过order by排序即可。rand()对每一条记录返回0.0到1.0之间的浮点数。
+当然也可以在order by之后跟一个常量浮点数，但此时结果是固定的。</p>
+
+<pre><code>mysql&gt; select ip_data.netId, ip_data.areaId from ip_data order by rand() limit 5;
++-------+--------+
+| netId | areaId |
++-------+--------+
+|     7 |   4019 | 
+|    10 |   1806 | 
+|     2 |   4608 | 
+|    13 |     42 | 
+|     3 |   4502 | 
++-------+--------+
+</code></pre>
+
+<h3>6. 使用is null判断字段是否为null</h3>
+
+<p>判断字段null值，不能使用=或者!=，即使null和null也不能通过=比较。应该使用 <code>is null</code>, 或者 <code>is not null</code>。</p>
+
+<pre><code>mysql&gt; select startIp, areaId from ip_data where netId  is null;
+</code></pre>
+
+<h3>7. 使用coalesce函数对字段进行默认处理</h3>
+
+<p>对字段的返回值进行合并，使用函数<code>coalesce(field, default)</code>：如果field不为null，取field的值，如果field值为null，取设置的默认值default。</p>
+
+<pre><code>mysql&gt; select number, coalesce(number, 1000) as new_number  from students;
++--------+------------+
+| number | new_number |
++--------+------------+
+|    111 |        111 | 
+|   NULL |       1000 | 
+|    333 |        333 | 
+|  12345 |      12345 | 
+|   NULL |       1000 | 
+|    777 |        777 | 
+|   NULL |       1000 | 
++--------+------------+
+</code></pre>
+
+<blockquote><p>当然，在select里使用<code>case when end</code>也能达到同样的效果，但显然使用coalesce()更简洁。</p></blockquote>
+
+<h3>8. 在order by之后通过数字指定字段进行排序</h3>
+
+<p>order by一般后跟字段名，表示根据字段名排序；也可以跟一个整数，该整数的值与select中的字段相对应，从1开始，表示根据select中的第几个字段排序，因此，该整数不能大于select中的字段个数。如下两种情况是等价的：</p>
+
+<pre><code>mysql&gt; select id, startIp, endIp, netId from ip_data order by id asc limit 5; 
+mysql&gt; select id, startIp, endIp, netId from ip_data order by 1 asc limit 5;
++----+----------+----------+-------+
+| id | startIp  | endIp    | netId |
++----+----------+----------+-------+
+|  1 | 17563648 | 17825791 |    11 | 
+|  2 | 18350080 | 18874367 |     2 | 
+|  3 | 19726336 | 19791871 |    10 | 
+|  4 | 19922944 | 20054015 |     1 | 
+|  5 | 20054016 | 20119551 |    10 | 
++----+----------+----------+-------+
+</code></pre>
+
+<p>另外，可以根据多个字段排序，优先级从左到右，即先根据第一个字段排序，如果第一个字段的值相等，然后根据第二个字段的值排序，依此类推：</p>
+
+<pre><code>&gt;&gt; select id, startIp, endIp, netId from ip_data order by netId asc, endIp desc limit 5;
++-------+------------+------------+-------+
+| id    | startIp    | endIp      | netId |
++-------+------------+------------+-------+
+| 17351 | 3757047808 | 3757572095 |     1 | 
+| 17348 | 3755737088 | 3755868159 |     1 | 
+| 17347 | 3755343872 | 3755474943 |     1 | 
+| 17341 | 3754295296 | 3754426367 |     1 | 
+| 17337 | 3750756352 | 3751804927 |     1 | 
++-------+------------+------------+-------+
+</code></pre>
+
+<h3>9. 通过substring函数对字段子串排序</h3>
+
+<p>使用函数<code>substring()</code>可以获取字符串的子串，使用<code>order by</code>可以根据该子串进行排序。
+注意：substring(str, pos)表示从pos开始的子串，其中位移从1开始，所以如果要表示
+取字符串的最后两个字符，应该是substring(str, length(str)-1).</p>
+
+<pre><code>mysql&gt; select file_path, file_name from file order by substr(file_name, length(file_name)-1) desc  limit 5;
++----------------+-----------------------+
+| file_path      | file_name             |
++----------------+-----------------------+
+| /opt/rankFile/ | phb_variety_day_issue | 
+| /opt/rankFile/ | catalog_variety       | 
+| /opt/rankFile/ | catalog_tv            | 
+| /opt/rankFile/ | catalog_cartoon       | 
+| /opt/rankFile/ | catalog_doc           | 
++----------------+-----------------------+
+</code></pre>
+
+<h3>10. 如何对含有null值的字段进行排序</h3>
+
+<p>mysql中字段的null值在排序时默认时按照最小值排序的，即升序时，null值在最前面，降序时在最后面。通过在select中使用<code>case when</code>对null值进行判断，然后定义排序顺序。
+如升序时将null值放在最后：</p>
+
+<pre><code>mysql&gt; select name, number from (select name, number, case when number is null then 0 else 1 end as is_null from students) as t order by is_null desc, number;
++----------+--------+
+| name     | number |
++----------+--------+
+| lingguo  |    111 | 
+| lisi     |    333 | 
+| guanyu   |    777 | 
+| wangwu   |  12345 | 
+| zhangsan |   NULL | 
+| zhangfei |   NULL | 
+| lingguo  |   NULL | 
++----------+--------+
+</code></pre>
+
+<h3>11. 字段值不同，排序的字段不同，如何实现？</h3>
+
+<p><code>case when</code>语句也可以在<code>order by</code>中，不同的条件，使用不同的字段进行排序。
+比如：如果number字段的值不为null，根据number排序，否则，根据enable排序：</p>
+
+<pre><code>mysql&gt; select name, number, enable from students order by case when number is null then enable else number end;
++----------+--------+--------+
+| name     | number | enable |
++----------+--------+--------+
+| zhangsan |   NULL |      0 | 
+| zhangfei |   NULL |      0 | 
+| lingguo  |   NULL |      1 | 
+| lingguo  |    111 |      1 | 
+| lisi     |    333 |      1 | 
+| guanyu   |    777 |      0 | 
+| wangwu   |  12345 |      0 | 
++----------+--------+--------+
+</code></pre>
+
+<h4>参考：</h4>
+
+<ul>
+<li><a href="http://book.douban.com/subject/1840666/">SQL Cookbook</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[MySql优化在项目中的应用]]></title>
-    <link href="http://nkcoder.github.io/blog/20140107/mysql-optize-in-project/"/>
+    <link href="http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project/"/>
     <updated>2014-01-07T21:38:18+08:00</updated>
-    <id>http://nkcoder.github.io/blog/20140107/mysql-optize-in-project</id>
-    <content type="html"><![CDATA[<h3 id="section">1. 提出问题</h3>
+    <id>http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project</id>
+    <content type="html"><![CDATA[<h3>1. 提出问题</h3>
+
 <p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
 
 <pre><code>SELECT
-	vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
-	sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
 FROM
-	vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
 WHERE
-	vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
 AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
 AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
 AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
 AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
 </code></pre>
 
-<p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p>
+<blockquote><p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p></blockquote>
 
 <!--more-->
-<p>### 2. 优化方案
-我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
 
-<h4 id="insert-into-select">2.1 通过insert into select汇总数据</h4>
+
+<h3>2. 优化方案</h3>
+
+<p>我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
+
+<h4>2.1 通过insert into select汇总数据</h4>
+
 <p>创建表结构之后（周增表和月增表的表结构和日增表一致），通过insert into TABLE select 语句可以将查询的结果写入指定的表中，完整的SQL语句为：</p>
 
-<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date)	SELECT 
+<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date) SELECT 
 tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) as tv_count_app, 
 sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AS tv_date 
 FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AND 
 SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid
 </code></pre>
 
-<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件”，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
+<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件"，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
 
-<h4 id="load-data">2.2 通过load data从文件导数据</h4>
+<h4>2.2 通过load data从文件导数据</h4>
+
 <p>因为select语句不会受binlog的限制，也就是说，数据是可以查出来的，只是没法一下子写入表中。我们可以先将查出来的数据写入文件，然后通过MySql的load data local infile命令从文件中将数据导入表中。
 查询数据存入文件：</p>
 
@@ -72,15 +290,17 @@ tv_count_app,tv_display_count_app,tv_date)"
 mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadDataSql"
 </code></pre>
 
-<h3 id="section-1">3. 总结</h3>
+<h3>3. 总结</h3>
+
 <p>优化之后，周榜和月榜的耗时大概在10s左右，与日榜差不多。整个系统的执行时间从30min左右降到10分钟左右，应该说效果还是比较明显的。
 我的方案只是一种形式的优化，肯定不是最优的，比如多表联查的效率很低，这应该也是个优化点，还会继续探索。</p>
 
-<h3 id="section-2">参考</h3>
+<h4>参考</h4>
 
 <ul>
-  <li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
 </ul>
+
 ]]></content>
   </entry>
   

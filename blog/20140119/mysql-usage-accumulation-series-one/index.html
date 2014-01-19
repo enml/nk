@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>MySql用法日积月累系列一 - You Sharp</title>
+  <meta name="author" content="lingguo">
+
+  
+  <meta name="description" content="在后台开发中，需要了解和掌握的MySql的常见用法和技巧。">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/syntax/syntax.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    body {
+      padding-bottom: 40px;
+    }
+    h1 {
+      margin-bottom: 15px;
+    }
+    img {
+      max-width: 100%;
+    }
+    .sharing, .meta, .pager {
+      margin: 20px 0px 20px 0px;
+    }
+    .page-footer p {
+      text-align: center;
+    }
+  </style>
+  <script src="/javascripts/libs/jquery.js"></script>
+  <script src="/javascripts/libs/modernizr-2.0.js"></script>
+  <script src="/javascripts/libs/bootstrap.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="You Sharp" type="application/atom+xml">
+  
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-43987204-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <nav role="navigation"><div class="navbar navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+
+      <a class="brand" href="/">You Sharp</a>
+
+      <div class="nav-collapse">
+        <ul class="nav">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+
+        <ul class="nav pull-right" data-subscription="rss">
+          <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+          
+        </ul>
+
+        
+          <form class="pull-right navbar-search" action="http://google.com/search" method="get">
+            <fieldset role="search">
+              <input type="hidden" name="q" value="site:nkcoder.github.io" />
+              <input class="search-query" type="text" name="q" results="0" placeholder="Search"/>
+            </fieldset>
+          </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+</nav>
+  <div class="container">
+    <div class="row-fluid">
+      
+<article class="hentry span9" role="article">
+
+  
+  <header class="page-header">
+    
+      <h1 class="entry-title">MySql用法日积月累系列一</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-19T19:38:59+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2014</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h3>1. 尽量不要使用select *</h3>
+
+<p>返回表中的所有field时，使用<code>select *</code>确实很方便，但是不推荐这么做，应该在select后将所有的field都列出来：一是方便自己，清楚地知道返回了哪些field；而是方便他人，在看你的代码时，别人不一定知道表中有哪些列。
+这两种方式的性能是一样的。</p>
+
+<h3>2. 尽量使用as创建易读的别名</h3>
+
+<h4>2.1 尽量使用易读的别名</h4>
+
+<pre><code>mysql&gt; select sal as salary, empName as employName from employ;
+</code></pre>
+
+<blockquote><p>使用易读的别名，可以让你的sql语句更容易被理解。</p></blockquote>
+
+<h4>2.2 在where中使用别名：</h4>
+
+<pre><code>mysql&gt; select sal as salary from employ where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>该语句报错，因为salary字段未识别，可以将该语句包装成一个临时表：</p></blockquote>
+
+<pre><code>mysql&gt; select * from (select sal as salary from employ) as t where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>为什么：因为where语句在select之前执行，所以在第一条语句中，salary还没有创建；而from语句在where语句之前执行，所以在第二条语句中，临时表t中有字段salary。</p></blockquote>
+
+<!--more-->
+
+
+<h3>3. 使用concat函数进行字段值的连接</h3>
+
+<p>将字段值和字符串拼接起来，使用<code>concat()</code>函数：</p>
+
+<pre><code>mysql&gt; select concat(startIp, " : ", endIp) as ipSeg from ip_data limit 1;
++---------------------+
+| ipSeg               |
++---------------------+
+| 17563648 : 17825791 | 
++---------------------+
+</code></pre>
+
+<h3>4. 使用case when进行条件判断</h3>
+
+<p>在select语句中，可以对返回结果进行逻辑处理。使用case表达式，语法格式如下。else可以省略，如果所有的when
+都不匹配，默认返回null；</p>
+
+<pre><code>case
+    when ... then
+    when ... then
+    else ...
+end
+</code></pre>
+
+<blockquote><p>注意，还有一个case表达式，用于存储过程，以<code>end case</code>结尾。</p></blockquote>
+
+<pre><code>mysql&gt; select netId, areaId, case when netId &gt; 10 then 'big' when netId &lt; 5 then 'small' else 'normal' end as status from ip_data limit 5;
++-------+--------+--------+
+| netId | areaId | status |
++-------+--------+--------+
+|    11 |   4019 | big    | 
+|     2 |   2813 | small  | 
+|    10 |     35 | normal | 
+|     1 |   2110 | small  | 
+|    10 |     35 | normal | 
++-------+--------+--------+
+</code></pre>
+
+<h3>5. 使用rand返回随机的记录</h3>
+
+<p>可以使用<code>rand()</code>函数返回一个随机数，通过order by排序即可。rand()对每一条记录返回0.0到1.0之间的浮点数。
+当然也可以在order by之后跟一个常量浮点数，但此时结果是固定的。</p>
+
+<pre><code>mysql&gt; select ip_data.netId, ip_data.areaId from ip_data order by rand() limit 5;
++-------+--------+
+| netId | areaId |
++-------+--------+
+|     7 |   4019 | 
+|    10 |   1806 | 
+|     2 |   4608 | 
+|    13 |     42 | 
+|     3 |   4502 | 
++-------+--------+
+</code></pre>
+
+<h3>6. 使用is null判断字段是否为null</h3>
+
+<p>判断字段null值，不能使用=或者!=，即使null和null也不能通过=比较。应该使用 <code>is null</code>, 或者 <code>is not null</code>。</p>
+
+<pre><code>mysql&gt; select startIp, areaId from ip_data where netId  is null;
+</code></pre>
+
+<h3>7. 使用coalesce函数对字段进行默认处理</h3>
+
+<p>对字段的返回值进行合并，使用函数<code>coalesce(field, default)</code>：如果field不为null，取field的值，如果field值为null，取设置的默认值default。</p>
+
+<pre><code>mysql&gt; select number, coalesce(number, 1000) as new_number  from students;
++--------+------------+
+| number | new_number |
++--------+------------+
+|    111 |        111 | 
+|   NULL |       1000 | 
+|    333 |        333 | 
+|  12345 |      12345 | 
+|   NULL |       1000 | 
+|    777 |        777 | 
+|   NULL |       1000 | 
++--------+------------+
+</code></pre>
+
+<blockquote><p>当然，在select里使用<code>case when end</code>也能达到同样的效果，但显然使用coalesce()更简洁。</p></blockquote>
+
+<h3>8. 在order by之后通过数字指定字段进行排序</h3>
+
+<p>order by一般后跟字段名，表示根据字段名排序；也可以跟一个整数，该整数的值与select中的字段相对应，从1开始，表示根据select中的第几个字段排序，因此，该整数不能大于select中的字段个数。如下两种情况是等价的：</p>
+
+<pre><code>mysql&gt; select id, startIp, endIp, netId from ip_data order by id asc limit 5; 
+mysql&gt; select id, startIp, endIp, netId from ip_data order by 1 asc limit 5;
++----+----------+----------+-------+
+| id | startIp  | endIp    | netId |
++----+----------+----------+-------+
+|  1 | 17563648 | 17825791 |    11 | 
+|  2 | 18350080 | 18874367 |     2 | 
+|  3 | 19726336 | 19791871 |    10 | 
+|  4 | 19922944 | 20054015 |     1 | 
+|  5 | 20054016 | 20119551 |    10 | 
++----+----------+----------+-------+
+</code></pre>
+
+<p>另外，可以根据多个字段排序，优先级从左到右，即先根据第一个字段排序，如果第一个字段的值相等，然后根据第二个字段的值排序，依此类推：</p>
+
+<pre><code>&gt;&gt; select id, startIp, endIp, netId from ip_data order by netId asc, endIp desc limit 5;
++-------+------------+------------+-------+
+| id    | startIp    | endIp      | netId |
++-------+------------+------------+-------+
+| 17351 | 3757047808 | 3757572095 |     1 | 
+| 17348 | 3755737088 | 3755868159 |     1 | 
+| 17347 | 3755343872 | 3755474943 |     1 | 
+| 17341 | 3754295296 | 3754426367 |     1 | 
+| 17337 | 3750756352 | 3751804927 |     1 | 
++-------+------------+------------+-------+
+</code></pre>
+
+<h3>9. 通过substring函数对字段子串排序</h3>
+
+<p>使用函数<code>substring()</code>可以获取字符串的子串，使用<code>order by</code>可以根据该子串进行排序。
+注意：substring(str, pos)表示从pos开始的子串，其中位移从1开始，所以如果要表示
+取字符串的最后两个字符，应该是substring(str, length(str)-1).</p>
+
+<pre><code>mysql&gt; select file_path, file_name from file order by substr(file_name, length(file_name)-1) desc  limit 5;
++----------------+-----------------------+
+| file_path      | file_name             |
++----------------+-----------------------+
+| /opt/rankFile/ | phb_variety_day_issue | 
+| /opt/rankFile/ | catalog_variety       | 
+| /opt/rankFile/ | catalog_tv            | 
+| /opt/rankFile/ | catalog_cartoon       | 
+| /opt/rankFile/ | catalog_doc           | 
++----------------+-----------------------+
+</code></pre>
+
+<h3>10. 如何对含有null值的字段进行排序</h3>
+
+<p>mysql中字段的null值在排序时默认时按照最小值排序的，即升序时，null值在最前面，降序时在最后面。通过在select中使用<code>case when</code>对null值进行判断，然后定义排序顺序。
+如升序时将null值放在最后：</p>
+
+<pre><code>mysql&gt; select name, number from (select name, number, case when number is null then 0 else 1 end as is_null from students) as t order by is_null desc, number;
++----------+--------+
+| name     | number |
++----------+--------+
+| lingguo  |    111 | 
+| lisi     |    333 | 
+| guanyu   |    777 | 
+| wangwu   |  12345 | 
+| zhangsan |   NULL | 
+| zhangfei |   NULL | 
+| lingguo  |   NULL | 
++----------+--------+
+</code></pre>
+
+<h3>11. 字段值不同，排序的字段不同，如何实现？</h3>
+
+<p><code>case when</code>语句也可以在<code>order by</code>中，不同的条件，使用不同的字段进行排序。
+比如：如果number字段的值不为null，根据number排序，否则，根据enable排序：</p>
+
+<pre><code>mysql&gt; select name, number, enable from students order by case when number is null then enable else number end;
++----------+--------+--------+
+| name     | number | enable |
++----------+--------+--------+
+| zhangsan |   NULL |      0 | 
+| zhangfei |   NULL |      0 | 
+| lingguo  |   NULL |      1 | 
+| lingguo  |    111 |      1 | 
+| lisi     |    333 |      1 | 
+| guanyu   |    777 |      0 | 
+| wangwu   |  12345 |      0 | 
++----------+--------+--------+
+</code></pre>
+
+<h4>参考：</h4>
+
+<ul>
+<li><a href="http://book.douban.com/subject/1840666/">SQL Cookbook</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-19T19:38:59+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mysql/'>MySql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/20140111/nonsense/" title="Previous Post:
+        2014-01-11 插曲">&laquo; 2014-01-11 插曲</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
+<aside class="sidebar-nav span3">
+  
+    <section>
+	<h4> 2014 To Myself </h4>
+	<ul>
+		<li> 多读书 </li>
+		<li> 关心家人，关爱自己 </li>
+		<li> 自信、踏实、勤奋、坚持 </li>
+		<li> 尽力将工作做到最好 </li>
+		<li> 因为喜欢，所以投入 </li>
+	</ul>
+</section>
+<section>
+  <h4>Categories</h4>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+</section>
+<section>
+	<h4> Recent Posts </h4>
+  	<ul>
+		
+		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
+		
+		  <li><a href="/blog/20140111/nonsense/">2014-01-11 插曲</a></li>
+		
+		  <li><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化在项目中的应用</a></li>
+		
+		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
+		
+		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
+		
+  	</ul>
+</section>
+<section>
+	<h4> Blogroll </h4>
+	<ul>
+		<li><a href="http://ifeve.com/" target="_blank">并发编程网</a></li>
+		<li><a href="http://tengine.taobao.org/book/index.html#" target="_blank">Nginx开发从入门到精通</a></li>
+		<li><a href="http://timyang.net/" target="_blank">Tim Yang</a></li>
+	</ul>
+</section>
+
+
+<section>
+	<h4> Recent Comments </h4>
+	<div id="dsq-recentcomments" class="dsq-widget"><script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"></script></div>
+</section>
+<section>
+<h4> Want To Read</h4>
+<div>
+<script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;picsize=small&amp;hideself=on&amp;show=wishlist&amp;n=9&amp;cat=book&amp;columns=3"></script>
+</div>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo" class="page-footer"><hr>
+<p>
+  Copyright &copy; 2014 - lingguo -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'nkcoder';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one/';
+        var disqus_url = 'http://nkcoder.github.io/blog/20140119/mysql-usage-accumulation-series-one/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

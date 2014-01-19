@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Bash | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/bash/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-01-11T23:41:31+08:00</updated>
+  <updated>2014-01-19T21:34:53+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -18,11 +18,9 @@
     <link href="http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example/"/>
     <updated>2014-01-05T14:36:30+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example</id>
-    <content type="html"><![CDATA[<blockquote>
-  <p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p>
-</blockquote>
+    <content type="html"><![CDATA[<blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
 
-<h4 id="for">1. for循环的第一种形式：</h4>
+<h4>1. for循环的第一种形式：</h4>
 
 <pre><code><div class="highlight"><pre><code class="bash"><span class="k">for </span>variable in 1 2 3 4 5
 <span class="k">do</span>
@@ -53,6 +51,8 @@
 </code></pre>
 
 <!--more-->
+
+
 <p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
 示例3：</p>
 
@@ -79,12 +79,12 @@
 <pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
 <span class="k">for </span>file in /etc/*
 <span class="k">do</span>
-<span class="k">	if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-		<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-		<span class="nb">break</span>
-<span class="nb">	</span><span class="k">fi</span>
+<span class="k">    if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+        <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+        <span class="nb">break</span>
+<span class="nb">    </span><span class="k">fi</span>
 <span class="k">done</span>
 </code></pre></div>
 </code></pre>
@@ -95,12 +95,13 @@
 for file in $(ls /etc/*)
 </code></pre>
 
-<h4 id="for-1">2. for循环的第二种形式：</h4>
+<h4>2. for循环的第二种形式：</h4>
+
 <p>与C语言for循环类似的语法：</p>
 
 <pre><code>for (( EXP1; EXP2; EXP3 ))
 do
-	commands
+    commands
 done
 </code></pre>
 
@@ -125,18 +126,19 @@ done
 </code></pre></div>
 </code></pre>
 
-<h4 id="forbreakcontinuec">3. for循环也支持break和continue关键字，与C语言一致</h4>
+<h4>3. for循环也支持break和continue关键字，与C语言一致</h4>
+
 <p>示例7：</p>
 
 <pre><code><div class="highlight"><pre><code class="bash"><span class="c">#!/bin/bash</span>
 <span class="k">for </span>file in /etc/*
 <span class="k">do</span>
-<span class="k">	if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
-		<span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
-		<span class="nb">break</span>
-<span class="nb">	</span><span class="k">fi</span>
+<span class="k">    if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+        <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+        <span class="nb">break</span>
+<span class="nb">    </span><span class="k">fi</span>
 <span class="k">done</span>
 </code></pre></div>
 </code></pre>
@@ -147,18 +149,17 @@ done
 <span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
 <span class="k">for </span>f in <span class="nv">$FILES</span>
 <span class="k">do</span>
-	<span class="c"># if .bak backup file exists, read next file</span>
-	<span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
-	<span class="k">then</span>
-<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
-		<span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
-	<span class="k">fi</span>
-	<span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
-	/bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
+    <span class="c"># if .bak backup file exists, read next file</span>
+    <span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
+    <span class="k">then</span>
+<span class="k">        </span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
+        <span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
+    <span class="k">fi</span>
+    <span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
+    /bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
 <span class="k">done</span>
 </code></pre></div>
 </code></pre>
-
 ]]></content>
   </entry>
   

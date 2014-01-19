@@ -109,6 +109,73 @@
       
   <header class="page-header">
     
+      <h1 class="entry-title"><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-19T19:38:59+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2014</time>
+        
+         | <a href="/blog/20140119/mysql-usage-accumulation-series-one/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3>1. 尽量不要使用select *</h3>
+
+<p>返回表中的所有field时，使用<code>select *</code>确实很方便，但是不推荐这么做，应该在select后将所有的field都列出来：一是方便自己，清楚地知道返回了哪些field；而是方便他人，在看你的代码时，别人不一定知道表中有哪些列。
+这两种方式的性能是一样的。</p>
+
+<h3>2. 尽量使用as创建易读的别名</h3>
+
+<h4>2.1 尽量使用易读的别名</h4>
+
+<pre><code>mysql&gt; select sal as salary, empName as employName from employ;
+</code></pre>
+
+<blockquote><p>使用易读的别名，可以让你的sql语句更容易被理解。</p></blockquote>
+
+<h4>2.2 在where中使用别名：</h4>
+
+<pre><code>mysql&gt; select sal as salary from employ where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>该语句报错，因为salary字段未识别，可以将该语句包装成一个临时表：</p></blockquote>
+
+<pre><code>mysql&gt; select * from (select sal as salary from employ) as t where salary &gt;= 10000;
+</code></pre>
+
+<blockquote><p>为什么：因为where语句在select之前执行，所以在第一条语句中，salary还没有创建；而from语句在where语句之前执行，所以在第二条语句中，临时表t中有字段salary。</p></blockquote>
+
+</div>
+  
+  
+    <footer>
+      <a rel="full-article" href="/blog/20140119/mysql-usage-accumulation-series-one/">Continue Reading &rarr;</a>
+    </footer>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header class="page-header">
+    
       <h1 class="entry-title"><a href="/blog/20140111/nonsense/">2014-01-11 插曲</a></h1>
     
     
@@ -154,7 +221,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化在项目中的应用</a></h1>
     
     
       <p class="meta">
@@ -172,36 +239,37 @@
 
 <time datetime="2014-01-07T21:38:18+08:00" pubdate data-updated="true">Jan 7<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140107/mysql-optize-in-project/#disqus_thread">Comments</a>
+         | <a href="/blog/20140107/mysql-optimize-in-project/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3 id="section">1. 提出问题</h3>
+  <div class="entry-content"><h3>1. 提出问题</h3>
+
 <p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
 
 <pre><code>SELECT
-	vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
-	sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
 FROM
-	vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
 WHERE
-	vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
 AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
 AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
 AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
 AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
 </code></pre>
 
-<p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p>
+<blockquote><p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p></blockquote>
 
 </div>
   
   
     <footer>
-      <a rel="full-article" href="/blog/20140107/mysql-optize-in-project/">Continue Reading &rarr;</a>
+      <a rel="full-article" href="/blog/20140107/mysql-optimize-in-project/">Continue Reading &rarr;</a>
     </footer>
   
 
@@ -238,21 +306,22 @@ AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
   </header>
 
 
-  <div class="entry-content"><blockquote>
-  <p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p>
-</blockquote>
+  <div class="entry-content"><blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
 
-<h3 id="section">1. 环境准备</h3>
-<p>#### 1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code>
-先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
+<h3>1. 环境准备</h3>
+
+<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
+
+<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
 git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
 
-<h4 id="ruby">1.2 安装ruby</h4>
+<h4>1.2 安装ruby</h4>
+
 <p>安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
 
 <pre><code>$ cd Devkit
 $ ruby dk.rb init
-   	$ ruby dk.rb install	
+$ ruby dk.rb install    
 </code></pre>
 
 </div>
@@ -296,31 +365,26 @@ $ ruby dk.rb init
   </header>
 
 
-  <div class="entry-content"><h3 id="vim">1. vim的三种模式</h3>
+  <div class="entry-content"><h3>1. vim的三种模式</h3>
 
 <ul>
-  <li>
-    <p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。  </p>
-  </li>
-  <li>
-    <p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br />
-令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br />
-辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p>
-  </li>
-  <li>
-    <p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br />
-模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p>
-  </li>
-  <li>
-    <p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p>
-  </li>
+<li><p>vim有三种模式，不同的模式对应着不同的操作，完成不同的功能；这三种模式分别是：一般模式，编辑模式和命令模式。</p></li>
+<li><p>一般模式：当我们使用vim打开文件时，就处于一般模式，一般模式是三种模式中的桥梁，也就是说可以从一般模式切换到命<br/>
+令模式或者编辑模式，但命令模式和编辑模式之间的切换必须经过一般模式，即先切换到一般模式，然后再进入另一种模式，编<br/>
+辑模式和命令模式之间是无法直接切换的。如何从另两种模式进入一般模式呢？按ESC即可。</p></li>
+<li><p>编辑模式：可以对文件的内容进行编辑操作，比如增加、删除和修改，就像使用notepad编辑文件一样；从一般模式进入编辑<br/>
+模式的命令主要有：i, I, a, A, o, O, s, S;（后面会详解）。</p></li>
+<li><p>命令模式：该模式下主要是用于文件的保存退出，从一般模式进入命令模式的方法是：冒号(:)。</p></li>
 </ul>
 
-<h3 id="section">2. 一般模式下的常用操作：</h3>
-<p>#### 2.1 光标移动
-	h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；</p>
 
-<pre><code>b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
+<h3>2. 一般模式下的常用操作：</h3>
+
+<h4>2.1 光标移动</h4>
+
+<pre><code>h, j, k, l: 向左、下、上、右移动一个字符；前面加上数字n，表示移动n个字符，如3j表示向下移动三个字符，即三行；
+
+b, B: 表示begin，从字符所在的单词开始，b表示移动到前一个短单词的第一个字符处；B表示移动到前一个长单词的第一个字符处，两个空白之间的单词为一个长单词，比如hello how're you, how,'和re分别为三个短单词，但只是一个长单词；
 e, E: 与b, B类似，从字符所在的单词开始，分别向后移动一个短单词、长单词；
 
 (, ): 从光标所在的语句块开始，(表示移动到前一个语句块，)表示移动到后一个语句块；
@@ -336,81 +400,6 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
   
     <footer>
       <a rel="full-article" href="/blog/20140105/vim-basic-usage/">Continue Reading &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header class="page-header">
-    
-      <h1 class="entry-title"><a href="/blog/20140105/bash-for-loop-by-example/">Bash For循环用法示例</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-01-05T14:36:30+08:00" pubdate data-updated="true">Jan 5<span>th</span>, 2014</time>
-        
-         | <a href="/blog/20140105/bash-for-loop-by-example/#disqus_thread">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><blockquote>
-  <p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p>
-</blockquote>
-
-<h4 id="for">1. for循环的第一种形式：</h4>
-
-<div class="highlight"><pre><code class="bash">    <span class="k">for </span>variable in 1 2 3 4 5
-    <span class="k">do</span>
-<span class="k">        </span><span class="nb">command</span>
-<span class="nb">    </span><span class="k">done</span>
-    
-</code></pre></div>
-
-<p>示例1：</p>
-
-<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
-    <span class="k">for </span>i in 1 2 3 4 5
-    <span class="k">do</span>
-<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
-    <span class="k">done</span>
-    
-</code></pre></div>
-
-<p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
-示例2：</p>
-
-<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
-    <span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
-    <span class="k">do</span>
-<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
-    <span class="k">done</span>
-    
-</code></pre></div>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/20140105/bash-for-loop-by-example/">Continue Reading &rarr;</a>
     </footer>
   
 
@@ -439,21 +428,21 @@ CTRL+b: 屏幕向上翻页，相当于PgDn；
 </section>
 <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (1)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
 		
+		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
+		
 		  <li><a href="/blog/20140111/nonsense/">2014-01-11 插曲</a></li>
 		
-		  <li><a href="/blog/20140107/mysql-optize-in-project/">MySql优化在项目中的应用</a></li>
+		  <li><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化在项目中的应用</a></li>
 		
 		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
 		
 		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
-		
-		  <li><a href="/blog/20140105/bash-for-loop-by-example/">bash for循环用法示例</a></li>
 		
   	</ul>
 </section>
