@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "MySql优化在项目中的应用"
+title: "MySql优化一则"
 description: MySql的一些优化策略在实际项目中的应用分析
 date: 2014-01-07 21:38:18 +0800
 comments: true
@@ -26,7 +26,6 @@ categories: MySql
 
 > 如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。
 
-<!--more-->
 
 ### 2. 优化方案
 

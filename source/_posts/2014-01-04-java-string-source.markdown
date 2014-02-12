@@ -35,7 +35,6 @@ categories: OpenSource
 
 >备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。
 
-<!--more-->
 
 #### 2.2 第二类
 

@@ -18,15 +18,27 @@ git可以下载最新版的[msysgit](https://code.google.com/p/msysgit/downloads
 
 #### 1.2 安装ruby
 
-安装RubyInstaller，安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：
+安装RubyInstaller，注意不要安装在带有空格的目录中，如C:\Program Files，否则后面有些命令可能会出错；安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：
 
 	$ cd Devkit
 	$ ruby dk.rb init
    	$ ruby dk.rb install	
 
-<!--more-->
+#### 1.3 安装python和pygments
 
-#### 1.3 安装Octopress
+python2.7: http://www.python.org/ftp/python/2.7.6/python-2.7.6.msi
+
+pygments的安装：
+先下载ez_setup.py脚本：https://pypi.python.org/pypi/setuptools#windows，然后执行：
+
+	$ python ez_setup.py
+
+会下载setuptools-2.2.tar.gz，解压并进入：
+
+	$ cd dist\setuptools-2.2
+	$ python easy_install.py pygments
+
+#### 1.4 安装Octopress
 
 默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：
 
@@ -42,7 +54,7 @@ git可以下载最新版的[msysgit](https://code.google.com/p/msysgit/downloads
 
 	source "http://ruby.taobao.org"
 
-#### 1.4 安装bundler
+#### 1.5 安装bundler
 
 	$ gem install bundler
 	$ bundle install
@@ -191,6 +203,8 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 
 #### 5.2 将博客拷贝到本地的步骤
 
+如果当前没有python和ruby的环境，则需要执行本博客1.1到1.3中的步骤，配置环境；
+
 首先将source分支拷贝到本地的博客目录：
 
 	$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
@@ -201,7 +215,7 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 	$ cd mybolg
 	$ git clone git@github.com:nkcoder/nkcoder.github.io.git _deploy
 
-最后，安装与配置：(前提：安装好python)
+最后，安装与配置：(注意：将source修改为国内淘宝的)
 
 	$ gem install bundler
 	$ bundle install
@@ -210,7 +224,7 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 可能需要输入github repo的地址，
 
 	Enter the read/write url for your repository
-	(For example, 'git@github.com:nkcoder/nkcoder.github.com)
+	(For example, 'git@github.com:nkcoder/nkcoder.github.io.git)
 
 #### 5.3 不同环境的同步
 
@@ -235,3 +249,4 @@ Octopress默认有两个分支，一个是source，包含生成博客的所有�
 + [Recent Comments in Octopress](http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/)
 + [用Github和Octopress搭建博客](http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/)
 + [使用github + Octopress 搭建免费博客](http://www.yanjiuyanjiu.com/blog/20130401/)
+

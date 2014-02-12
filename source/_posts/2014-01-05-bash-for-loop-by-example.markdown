@@ -40,7 +40,6 @@ categories: Bash
     done
     {% endhighlight %}
 
-<!--more-->
 
 bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
 示例3：

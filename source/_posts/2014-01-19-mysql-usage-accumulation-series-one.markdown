@@ -31,7 +31,6 @@ categories: MySql
 
 > 为什么：因为where语句在select之前执行，所以在第一条语句中，salary还没有创建；而from语句在where语句之前执行，所以在第二条语句中，临时表t中有字段salary。
 
-<!--more-->
 
 ### 3. 使用concat函数进行字段值的连接
 
