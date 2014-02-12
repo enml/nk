@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>MySql优化一则 - You Sharp</title>
+  <meta name="author" content="lingguo">
+
+  
+  <meta name="description" content="MySql的一些优化策略在实际项目中的应用分析">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/syntax/syntax.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <style type="text/css">
+    body {
+      padding-bottom: 40px;
+    }
+    h1 {
+      margin-bottom: 15px;
+    }
+    img {
+      max-width: 100%;
+    }
+    .sharing, .meta, .pager {
+      margin: 20px 0px 20px 0px;
+    }
+    .page-footer p {
+      text-align: center;
+    }
+  </style>
+  <script src="/javascripts/libs/jquery.js"></script>
+  <script src="/javascripts/libs/modernizr-2.0.js"></script>
+  <script src="/javascripts/libs/bootstrap.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="You Sharp" type="application/atom+xml">
+  
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-43987204-2']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <nav role="navigation"><div class="navbar navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+
+      <a class="brand" href="/">You Sharp</a>
+
+      <div class="nav-collapse">
+        <ul class="nav">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+
+        <ul class="nav pull-right" data-subscription="rss">
+          <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+          
+        </ul>
+
+        
+          <form class="pull-right navbar-search" action="http://google.com/search" method="get">
+            <fieldset role="search">
+              <input type="hidden" name="q" value="site:nkcoder.github.io" />
+              <input class="search-query" type="text" name="q" results="0" placeholder="Search"/>
+            </fieldset>
+          </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+</nav>
+  <div class="container">
+    <div class="row-fluid">
+      
+<article class="hentry span9" role="article">
+
+  
+  <header class="page-header">
+    
+      <h1 class="entry-title">MySql优化一则</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-07T21:38:18+08:00" pubdate data-updated="true">Jan 7<span>th</span>, 2014</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h3>1. 提出问题</h3>
+
+<p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
+
+<pre><code>SELECT
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+FROM
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+WHERE
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
+AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
+AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
+AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
+</code></pre>
+
+<blockquote><p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p></blockquote>
+
+<h3>2. 优化方案</h3>
+
+<p>我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
+
+<h4>2.1 通过insert into select汇总数据</h4>
+
+<p>创建表结构之后（周增表和月增表的表结构和日增表一致），通过insert into TABLE select 语句可以将查询的结果写入指定的表中，完整的SQL语句为：</p>
+
+<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date) SELECT 
+tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) as tv_count_app, 
+sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AS tv_date 
+FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AND 
+SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid
+</code></pre>
+
+<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件&#8221;，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
+
+<h4>2.2 通过load data从文件导数据</h4>
+
+<p>因为select语句不会受binlog的限制，也就是说，数据是可以查出来的，只是没法一下子写入表中。我们可以先将查出来的数据写入文件，然后通过MySql的load data local infile命令从文件中将数据导入表中。
+查询数据存入文件：</p>
+
+<pre><code>selectSql="SELECT tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) 
+as tv_count_app, sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AS tv_date FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AND SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid"
+
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$selectSql" &gt; $dataFilePath
+</code></pre>
+
+<p>从文件将数据load进表中：</p>
+
+<pre><code>loadDataSql="load data local infile '$dataFilePath' into table t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,
+tv_count_app,tv_display_count_app,tv_date)"
+
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadDataSql"
+</code></pre>
+
+<h3>3. 总结</h3>
+
+<p>优化之后，周榜和月榜的耗时大概在10s左右，与日榜差不多。整个系统的执行时间从30min左右降到10分钟左右，应该说效果还是比较明显的。
+我的方案只是一种形式的优化，肯定不是最优的，比如多表联查的效率很低，这应该也是个优化点，还会继续探索。</p>
+
+<h4>参考</h4>
+
+<ul>
+<li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-07T21:38:18+08:00" pubdate data-updated="true">Jan 7<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mysql/'>MySql</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/20140105/github-pages-and-octopress-blog-built/" title="Previous Post:
+        使用github pages和Octopress搭建静态博客及配置">&laquo; 使用github pages和Octopress搭建静态博客及配置</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+      <li class="next"><a class="basic-alignment right" href="/blog/20140111/nonsense/"
+        title="Next Post: 2014-01-11 插曲">2014-01-11 插曲
+        &raquo;</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
+<aside class="sidebar-nav span3">
+  
+    <section>
+  <h4>Categories</h4>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/notech/'>NoTech (2)</a></li><li><a href='/blog/categories/opensource/'>OpenSource (1)</a></li></ul>
+</section>
+<section>
+	<h4> Recent Posts </h4>
+  	<ul>
+		
+		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
+		
+		  <li><a href="/blog/20140111/nonsense/">2014-01-11 插曲</a></li>
+		
+		  <li><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化一则</a></li>
+		
+		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
+		
+		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
+		
+		  <li><a href="/blog/20140105/bash-for-loop-by-example/">bash for循环用法示例</a></li>
+		
+		  <li><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></li>
+		
+  	</ul>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo" class="page-footer"><hr>
+<p>
+  Copyright &copy; 2014 - lingguo -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'nkcoder';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project/';
+        var disqus_url = 'http://nkcoder.github.io/blog/20140107/mysql-optimize-in-project/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
