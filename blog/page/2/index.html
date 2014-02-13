@@ -109,7 +109,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">Memcached安装libevent-repcached-memcached</a></h1>
     
     
       <p class="meta">
@@ -125,216 +125,124 @@
   
 
 
-<time datetime="2014-01-19T19:38:59+08:00" pubdate data-updated="true">Jan 19<span>th</span>, 2014</time>
+<time datetime="2014-02-13T07:58:41+08:00" pubdate data-updated="true">Feb 13<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140119/mysql-usage-accumulation-series-one/#disqus_thread">Comments</a>
+         | <a href="/blog/20140213/memcached-install-libevent-repcached-memcached/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. 尽量不要使用select *</h3>
+  <div class="entry-content"><blockquote><p>安装顺序：</p></blockquote>
 
-<p>返回表中的所有field时，使用<code>select *</code>确实很方便，但是不推荐这么做，应该在select后将所有的field都列出来：一是方便自己，清楚地知道返回了哪些field；而是方便他人，在看你的代码时，别人不一定知道表中有哪些列。
-这两种方式的性能是一样的。</p>
-
-<h3>2. 尽量使用as创建易读的别名</h3>
-
-<h4>2.1 尽量使用易读的别名</h4>
-
-<pre><code>mysql&gt; select sal as salary, empName as employName from employ;
+<pre><code>1. 先安装libevent，因为memcached依赖它；
+2. 给memcached打上repcached补丁，支持主从结构，实现高可用；
+3. 安装memcached，启用replication；
 </code></pre>
 
-<blockquote><p>使用易读的别名，可以让你的sql语句更容易被理解。</p></blockquote>
+<h3>1. libevent</h3>
 
-<h4>2.2 在where中使用别名：</h4>
-
-<pre><code>mysql&gt; select sal as salary from employ where salary &gt;= 10000;
+<pre><code># wget https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz -P /opt/softs/
+# ./configure --prefix=/usr/local/
+# make &amp;&amp; make install
 </code></pre>
 
-<blockquote><p>该语句报错，因为salary字段未识别，可以将该语句包装成一个临时表：</p></blockquote>
+<h3>2. repcached &amp;&amp; memcached</h3>
 
-<pre><code>mysql&gt; select * from (select sal as salary from employ) as t where salary &gt;= 10000;
+<p>当前补丁最新位1.4.13，memcached的版本应该一直，否则会出现异常；</p>
+
+<pre><code># wget https://memcached.googlecode.com/files/memcached-1.4.13.tar.gz -P /opt/softs/
+# wget http://mdounin.ru/files/repcached-2.3.1-1.4.13.patch.gz -P ./
+
+# tar zxvf memcached-1.4.13.tar.gz -C /opt/softs/
+# gzip -d repcached-2.3.1-1.4.13.patch.gz
+
+# cd /opt/softs/memcached-1.4.13
+# patch -p1 -i ../repcached-2.3.1-1.4.13.patch
+# ./configure --prefix=/usr/local/ --with-libevent=/usr/local/ --enable-replication
+# make &amp;&amp; make install
 </code></pre>
 
-<blockquote><p>为什么：因为where语句在select之前执行，所以在第一条语句中，salary还没有创建；而from语句在where语句之前执行，所以在第二条语句中，临时表t中有字段salary。</p></blockquote>
+<h3>3. memcached (with repcached) 主从测试</h3>
 
-<h3>3. 使用concat函数进行字段值的连接</h3>
+<p>在本机的两个不同的端口上启动两个memcached实例，一主一从，然后测试相互之间的数据同步。
+memcached主从测试在本机的两个不同的端口上启动两个memcached实例，一主一从，然后测试相互之间的数据同步。</p>
 
-<p>将字段值和字符串拼接起来，使用<code>concat()</code>函数：</p>
+<h4>3.1 启动两个memcached实例</h4>
 
-<pre><code>mysql&gt; select concat(startIp, " : ", endIp) as ipSeg from ip_data limit 1;
-+---------------------+
-| ipSeg               |
-+---------------------+
-| 17563648 : 17825791 | 
-+---------------------+
+<pre><code># memcached -d -m -p 11211 -u nobody -l 127.0.0.1 -x 127.0.0.1 -X 11222 -P /tmp/localhost_master.pid -vv
+# memcached -d -m -p 11212 -u nobody -l 127.0.0.1 -x 127.0.0.1 -X 11222 -P /tmp/localhost_slave.pid -vv
 </code></pre>
 
-<h3>4. 使用case when进行条件判断</h3>
+<blockquote><p>两个实例的端口分别为11211和11212，共同的监听端口为11222。</p></blockquote>
 
-<p>在select语句中，可以对返回结果进行逻辑处理。使用case表达式，语法格式如下。else可以省略，如果所有的when
-都不匹配，默认返回null；</p>
+<h4>3.2 通过telnet测试数据的同步</h4>
 
-<pre><code>case
-    when ... then
-    when ... then
-    else ...
-end
+<blockquote><p>进入master，set两个值</p></blockquote>
+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11211
+Trying 127.0.0.1...
+&lt;31 new auto-negotiating client connection
+Connected to 127.0.0.1.
+Escape character is '^]'.
+set city 0 0 7
+31: Client using the ascii protocol
+&lt;31 set city 0 0 7
+tianjin
+&gt;31 STORED
+replication: pop
+replication: pop
+STORED
+set city2 0 0 7
+&lt;31 set city2 0 0 7
+beijing
+&gt;31 STORED
+replication: pop
+replication: pop
+STORED  
 </code></pre>
 
-<blockquote><p>注意，还有一个case表达式，用于存储过程，以<code>end case</code>结尾。</p></blockquote>
+<blockquote><p>进入slave，get刚才设置的值，并删除其中一个值</p></blockquote>
 
-<pre><code>mysql&gt; select netId, areaId, case when netId &gt; 10 then 'big' when netId &lt; 5 then 'small' else 'normal' end as status from ip_data limit 5;
-+-------+--------+--------+
-| netId | areaId | status |
-+-------+--------+--------+
-|    11 |   4019 | big    | 
-|     2 |   2813 | small  | 
-|    10 |     35 | normal | 
-|     1 |   2110 | small  | 
-|    10 |     35 | normal | 
-+-------+--------+--------+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11212
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+get city
+VALUE city 0 7
+tianjin
+END
+get city2
+VALUE city2 0 7
+beijing
+END
+delete city2
+&lt;26 delete city2
+REP&gt;26 DELETED
+DELETED
 </code></pre>
 
-<h3>5. 使用rand返回随机的记录</h3>
+<blockquote><p>再次进入master，获取set的两个值，删除的数据是否可以get</p></blockquote>
 
-<p>可以使用<code>rand()</code>函数返回一个随机数，通过order by排序即可。rand()对每一条记录返回0.0到1.0之间的浮点数。
-当然也可以在order by之后跟一个常量浮点数，但此时结果是固定的。</p>
-
-<pre><code>mysql&gt; select ip_data.netId, ip_data.areaId from ip_data order by rand() limit 5;
-+-------+--------+
-| netId | areaId |
-+-------+--------+
-|     7 |   4019 | 
-|    10 |   1806 | 
-|     2 |   4608 | 
-|    13 |     42 | 
-|     3 |   4502 | 
-+-------+--------+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11211
+Trying 127.0.0.1...
+&lt;31 new auto-negotiating client connection
+Connected to 127.0.0.1.
+Escape character is '^]'.
+get city
+31: Client using the ascii protocol
+&lt;31 get city
+&gt;31 sending key city
+&gt;31 END
+VALUE city 0 7
+tianjin
+END
+get city2
+&lt;31 get city2
+&gt;31 END
+END
 </code></pre>
-
-<h3>6. 使用is null判断字段是否为null</h3>
-
-<p>判断字段null值，不能使用=或者!=，即使null和null也不能通过=比较。应该使用 <code>is null</code>, 或者 <code>is not null</code>。</p>
-
-<pre><code>mysql&gt; select startIp, areaId from ip_data where netId  is null;
-</code></pre>
-
-<h3>7. 使用coalesce函数对字段进行默认处理</h3>
-
-<p>对字段的返回值进行合并，使用函数<code>coalesce(field, default)</code>：如果field不为null，取field的值，如果field值为null，取设置的默认值default。</p>
-
-<pre><code>mysql&gt; select number, coalesce(number, 1000) as new_number  from students;
-+--------+------------+
-| number | new_number |
-+--------+------------+
-|    111 |        111 | 
-|   NULL |       1000 | 
-|    333 |        333 | 
-|  12345 |      12345 | 
-|   NULL |       1000 | 
-|    777 |        777 | 
-|   NULL |       1000 | 
-+--------+------------+
-</code></pre>
-
-<blockquote><p>当然，在select里使用<code>case when end</code>也能达到同样的效果，但显然使用coalesce()更简洁。</p></blockquote>
-
-<h3>8. 在order by之后通过数字指定字段进行排序</h3>
-
-<p>order by一般后跟字段名，表示根据字段名排序；也可以跟一个整数，该整数的值与select中的字段相对应，从1开始，表示根据select中的第几个字段排序，因此，该整数不能大于select中的字段个数。如下两种情况是等价的：</p>
-
-<pre><code>mysql&gt; select id, startIp, endIp, netId from ip_data order by id asc limit 5; 
-mysql&gt; select id, startIp, endIp, netId from ip_data order by 1 asc limit 5;
-+----+----------+----------+-------+
-| id | startIp  | endIp    | netId |
-+----+----------+----------+-------+
-|  1 | 17563648 | 17825791 |    11 | 
-|  2 | 18350080 | 18874367 |     2 | 
-|  3 | 19726336 | 19791871 |    10 | 
-|  4 | 19922944 | 20054015 |     1 | 
-|  5 | 20054016 | 20119551 |    10 | 
-+----+----------+----------+-------+
-</code></pre>
-
-<p>另外，可以根据多个字段排序，优先级从左到右，即先根据第一个字段排序，如果第一个字段的值相等，然后根据第二个字段的值排序，依此类推：</p>
-
-<pre><code>&gt;&gt; select id, startIp, endIp, netId from ip_data order by netId asc, endIp desc limit 5;
-+-------+------------+------------+-------+
-| id    | startIp    | endIp      | netId |
-+-------+------------+------------+-------+
-| 17351 | 3757047808 | 3757572095 |     1 | 
-| 17348 | 3755737088 | 3755868159 |     1 | 
-| 17347 | 3755343872 | 3755474943 |     1 | 
-| 17341 | 3754295296 | 3754426367 |     1 | 
-| 17337 | 3750756352 | 3751804927 |     1 | 
-+-------+------------+------------+-------+
-</code></pre>
-
-<h3>9. 通过substring函数对字段子串排序</h3>
-
-<p>使用函数<code>substring()</code>可以获取字符串的子串，使用<code>order by</code>可以根据该子串进行排序。
-注意：substring(str, pos)表示从pos开始的子串，其中位移从1开始，所以如果要表示
-取字符串的最后两个字符，应该是substring(str, length(str)-1).</p>
-
-<pre><code>mysql&gt; select file_path, file_name from file order by substr(file_name, length(file_name)-1) desc  limit 5;
-+----------------+-----------------------+
-| file_path      | file_name             |
-+----------------+-----------------------+
-| /opt/rankFile/ | phb_variety_day_issue | 
-| /opt/rankFile/ | catalog_variety       | 
-| /opt/rankFile/ | catalog_tv            | 
-| /opt/rankFile/ | catalog_cartoon       | 
-| /opt/rankFile/ | catalog_doc           | 
-+----------------+-----------------------+
-</code></pre>
-
-<h3>10. 如何对含有null值的字段进行排序</h3>
-
-<p>mysql中字段的null值在排序时默认时按照最小值排序的，即升序时，null值在最前面，降序时在最后面。通过在select中使用<code>case when</code>对null值进行判断，然后定义排序顺序。
-如升序时将null值放在最后：</p>
-
-<pre><code>mysql&gt; select name, number from (select name, number, case when number is null then 0 else 1 end as is_null from students) as t order by is_null desc, number;
-+----------+--------+
-| name     | number |
-+----------+--------+
-| lingguo  |    111 | 
-| lisi     |    333 | 
-| guanyu   |    777 | 
-| wangwu   |  12345 | 
-| zhangsan |   NULL | 
-| zhangfei |   NULL | 
-| lingguo  |   NULL | 
-+----------+--------+
-</code></pre>
-
-<h3>11. 字段值不同，排序的字段不同，如何实现？</h3>
-
-<p><code>case when</code>语句也可以在<code>order by</code>中，不同的条件，使用不同的字段进行排序。
-比如：如果number字段的值不为null，根据number排序，否则，根据enable排序：</p>
-
-<pre><code>mysql&gt; select name, number, enable from students order by case when number is null then enable else number end;
-+----------+--------+--------+
-| name     | number | enable |
-+----------+--------+--------+
-| zhangsan |   NULL |      0 | 
-| zhangfei |   NULL |      0 | 
-| lingguo  |   NULL |      1 | 
-| lingguo  |    111 |      1 | 
-| lisi     |    333 |      1 | 
-| guanyu   |    777 |      0 | 
-| wangwu   |  12345 |      0 | 
-+----------+--------+--------+
-</code></pre>
-
-<h4>参考：</h4>
-
-<ul>
-<li><a href="http://book.douban.com/subject/1840666/">SQL Cookbook</a></li>
-</ul>
-
 </div>
   
   
@@ -356,11 +264,13 @@ mysql&gt; select id, startIp, endIp, netId from ip_data order by 1 asc limit 5;
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (1)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (2)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140213/memcached-resource-libevent-repcached/">memcached相关依赖资源-libevent-repcached</a></li>
 		
 		  <li><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">memcached安装libevent-repcached-memcached</a></li>
 		

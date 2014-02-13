@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: Linux - You Sharp</title>
+  <title>memcached相关依赖资源-libevent-repcached - You Sharp</title>
   <meta name="author" content="lingguo">
 
   
-  <meta name="description" content="Category: Linux">
+  <meta name="description" content="memcached的依赖：libevent和repcached">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://nkcoder.github.ioblog/categories/linux">
+  <link rel="canonical" href="http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -102,38 +102,121 @@
   <div class="container">
     <div class="row-fluid">
       
-<article role="article" class="span9">
+<article class="hentry span9" role="article">
 
   
   <header class="page-header">
-    <h1 class="entry-title">Category: Linux</h1>
+    
+      <h1 class="entry-title">Memcached相关依赖资源-libevent-repcached</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-13T23:17:23+08:00" pubdate data-updated="true">Feb 13<span>th</span>, 2014</time>
+        
+         | <a href="#disqus_thread">Comments</a>
+        
+      </p>
     
   </header>
-  
-  <div id="blog-archives" class="category">
 
 
+<div class="entry-content"><h3>1. <code>memcached</code></h3>
 
-  
-  <h1>2014</h1>
+<pre><code># yum info memcached
+</code></pre>
 
-<article>
-  <div class="well">
+<p>如果发行版自带的memcached版本太旧，进入<a href="https://code.google.com/p/memcached/">memcached网站</a>, 下载源码自己安装，当前最新版本位1.4.15.</p>
 
-<h2><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></h2>
-<time datetime="2014-01-05T14:52:26+08:00" pubdate><span class='month'>Jan</span> <span class='day'>05</span> <span class='year'>2014</span></time>
+<h3>2. <code>libevent-devel</code></h3>
 
-<footer>
-  <span class="categories">posted in <a class='category' href='/blog/categories/linux/'>Linux</a></span>
-</footer>
+<pre><code># yum info libevent libevent-devel
+</code></pre>
 
+<p>如果yum安装的版本太旧，进入<a href="https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz">libevent网站</a>，下载源码自行安装，当前最新版本位2.0.21</p>
+
+<h3>3. <code>repcached</code></h3>
+
+<p>一种是补丁，一种是与memcached集成版。</p>
+
+<p>集成版<a href="https://github.com/mdounin/memcached/tree/repcached">下载地址</a>（最新支持1.4.13）</p>
+
+<p>补丁版<a href="http://mdounin.ru/files/repcached-2.3.1-1.4.13.patch.gz">下载地址</a> 或者<a href="https://github.com/usecide/repcached/">这里</a>；repcached的<a href="http://repcached.lab.klab.org/">官方网站</a>，但是好久没更新了。</p>
+
+<p>安装请参考前一篇博文：<a href="http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached/">Memcached安装libevent-repcached-memcached</a></p>
 </div>
 
-</article>
 
-</div>
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
 
   
+
+
+<time datetime="2014-02-13T23:17:23+08:00" pubdate data-updated="true">Feb 13<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/memcached/'>memcached</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+</div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/20140213/memcached-install-libevent-repcached-memcached/" title="Previous Post:
+        memcached安装libevent-repcached-memcached">&laquo; memcached安装libevent-repcached-memcached</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
 </article>
 
 <aside class="sidebar-nav span3">
@@ -186,7 +269,10 @@
       var disqus_shortname = 'nkcoder';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/';
+        var disqus_url = 'http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
