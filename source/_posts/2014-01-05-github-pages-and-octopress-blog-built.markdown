@@ -4,7 +4,7 @@ title: "使用github pages和Octopress搭建静态博客及配置"
 date: 2014-01-05 22:07:11 +0800
 comments: true
 tags: Octopress, github pages
-categories: NoTech 
+categories: Tools 
 ---
 
 >初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。
