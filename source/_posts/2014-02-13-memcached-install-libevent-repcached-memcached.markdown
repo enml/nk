@@ -4,6 +4,7 @@ title: "memcached安装libevent-repcached-memcached"
 description: memcached的安装，包括依赖libevent和repcached
 date: 2014-02-13 07:58:41 +0800
 comments: true
+tags: memcached
 categories: memcached
 ---
 
