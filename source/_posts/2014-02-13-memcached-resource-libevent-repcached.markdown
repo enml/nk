@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "memcached相关依赖资源-libevent-repcached"
+title: "memcached专题：相关依赖资源-libevent-repcached"
 description: memcached的依赖：libevent和repcached
 date: 2014-02-13 23:17:23 +0800
 comments: true
