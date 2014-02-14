@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-02-13T23:30:12+08:00</updated>
+  <updated>2014-02-14T16:25:01+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[memcached相关依赖资源-libevent-repcached]]></title>
+    <title type="html"><![CDATA[memcached专题：相关依赖资源-libevent-repcached]]></title>
     <link href="http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/"/>
     <updated>2014-02-13T23:17:23+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached</id>
@@ -45,7 +45,7 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[memcached安装libevent-repcached-memcached]]></title>
+    <title type="html"><![CDATA[memcached专题：安装libevent-repcached-memcached]]></title>
     <link href="http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached/"/>
     <updated>2014-02-13T07:58:41+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached</id>
