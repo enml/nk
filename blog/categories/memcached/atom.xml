@@ -4,7 +4,7 @@
   <title><![CDATA[Category: memcached | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/memcached/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-02-15T23:04:25+08:00</updated>
+  <updated>2014-02-15T23:10:35+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[memcached用法：参数和命令]]></title>
+    <title type="html"><![CDATA[memcached专题：参数和命令解释]]></title>
     <link href="http://nkcoder.github.io/blog/20140215/memcached-usage-parameters-commands/"/>
     <updated>2014-02-15T23:02:36+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140215/memcached-usage-parameters-commands</id>
