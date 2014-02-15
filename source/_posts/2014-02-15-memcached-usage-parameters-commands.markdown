@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "memcached用法：参数和命令"
+title: "memcached专题：参数和命令解释"
 description: memcached的基本用法，参数和命令详解
 date: 2014-02-15 23:02:36 +0800
 comments: true
