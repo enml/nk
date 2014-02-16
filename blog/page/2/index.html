@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140213/memcached-resource-libevent-repcached/">Memcached专题：相关依赖资源-libevent-repcached</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">Memcached安装: Libevent-repcached-memcached</a></h1>
     
     
       <p class="meta">
@@ -126,38 +126,124 @@
   
 
 
-<time datetime="2014-02-13T23:17:23+08:00" pubdate data-updated="true">Feb 13<span>th</span>, 2014</time>
+<time datetime="2014-02-13T07:58:41+08:00" pubdate data-updated="true">Feb 13<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140213/memcached-resource-libevent-repcached/#disqus_thread">Comments</a>
+         | <a href="/blog/20140213/memcached-install-libevent-repcached-memcached/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. <code>memcached</code></h3>
+  <div class="entry-content"><blockquote><p>安装顺序：</p></blockquote>
 
-<pre><code># yum info memcached
+<pre><code>1. 先安装libevent，因为memcached依赖它；
+2. 给memcached打上repcached补丁，支持主从结构，实现高可用；
+3. 安装memcached，启用replication；
 </code></pre>
 
-<p>如果发行版自带的memcached版本太旧，进入<a href="https://code.google.com/p/memcached/">memcached网站</a>, 下载源码自己安装，当前最新版本位1.4.15.</p>
+<h3>1. libevent</h3>
 
-<h3>2. <code>libevent-devel</code></h3>
-
-<pre><code># yum info libevent libevent-devel
+<pre><code># wget https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz -P /opt/softs/
+# ./configure --prefix=/usr/local/
+# make &amp;&amp; make install
 </code></pre>
 
-<p>如果yum安装的版本太旧，进入<a href="https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz">libevent网站</a>，下载源码自行安装，当前最新版本位2.0.21</p>
+<h3>2. repcached &amp;&amp; memcached</h3>
 
-<h3>3. <code>repcached</code></h3>
+<p>当前补丁最新位1.4.13，memcached的版本应该一直，否则会出现异常；</p>
 
-<p>一种是补丁，一种是与memcached集成版。</p>
+<pre><code># wget https://memcached.googlecode.com/files/memcached-1.4.13.tar.gz -P /opt/softs/
+# wget http://mdounin.ru/files/repcached-2.3.1-1.4.13.patch.gz -P ./
 
-<p>集成版<a href="https://github.com/mdounin/memcached/tree/repcached">下载地址</a>（最新支持1.4.13）</p>
+# tar zxvf memcached-1.4.13.tar.gz -C /opt/softs/
+# gzip -d repcached-2.3.1-1.4.13.patch.gz
 
-<p>补丁版<a href="http://mdounin.ru/files/repcached-2.3.1-1.4.13.patch.gz">下载地址</a> 或者<a href="https://github.com/usecide/repcached/">这里</a>；repcached的<a href="http://repcached.lab.klab.org/">官方网站</a>，但是好久没更新了。</p>
+# cd /opt/softs/memcached-1.4.13
+# patch -p1 -i ../repcached-2.3.1-1.4.13.patch
+# ./configure --prefix=/usr/local/ --with-libevent=/usr/local/ --enable-replication
+# make &amp;&amp; make install
+</code></pre>
 
-<p>安装请参考前一篇博文：<a href="http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached/">Memcached安装libevent-repcached-memcached</a></p>
+<h3>3. memcached (with repcached) 主从测试</h3>
+
+<p>在本机的两个不同的端口上启动两个memcached实例，一主一从，然后测试相互之间的数据同步。
+memcached主从测试在本机的两个不同的端口上启动两个memcached实例，一主一从，然后测试相互之间的数据同步。</p>
+
+<h4>3.1 启动两个memcached实例</h4>
+
+<pre><code># memcached -d -m -p 11211 -u nobody -l 127.0.0.1 -x 127.0.0.1 -X 11222 -P /tmp/localhost_master.pid -vv
+# memcached -d -m -p 11212 -u nobody -l 127.0.0.1 -x 127.0.0.1 -X 11222 -P /tmp/localhost_slave.pid -vv
+</code></pre>
+
+<blockquote><p>两个实例的端口分别为11211和11212，共同的监听端口为11222。</p></blockquote>
+
+<h4>3.2 通过telnet测试数据的同步</h4>
+
+<blockquote><p>进入master，set两个值</p></blockquote>
+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11211
+Trying 127.0.0.1...
+&lt;31 new auto-negotiating client connection
+Connected to 127.0.0.1.
+Escape character is '^]'.
+set city 0 0 7
+31: Client using the ascii protocol
+&lt;31 set city 0 0 7
+tianjin
+&gt;31 STORED
+replication: pop
+replication: pop
+STORED
+set city2 0 0 7
+&lt;31 set city2 0 0 7
+beijing
+&gt;31 STORED
+replication: pop
+replication: pop
+STORED  
+</code></pre>
+
+<blockquote><p>进入slave，get刚才设置的值，并删除其中一个值</p></blockquote>
+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11212
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+get city
+VALUE city 0 7
+tianjin
+END
+get city2
+VALUE city2 0 7
+beijing
+END
+delete city2
+&lt;26 delete city2
+REP&gt;26 DELETED
+DELETED
+</code></pre>
+
+<blockquote><p>再次进入master，获取set的两个值，删除的数据是否可以get</p></blockquote>
+
+<pre><code>[root@localhost ~]# telnet 127.0.0.1 11211
+Trying 127.0.0.1...
+&lt;31 new auto-negotiating client connection
+Connected to 127.0.0.1.
+Escape character is '^]'.
+get city
+31: Client using the ascii protocol
+&lt;31 get city
+&gt;31 sending key city
+&gt;31 END
+VALUE city 0 7
+tianjin
+END
+get city2
+&lt;31 get city2
+&gt;31 END
+END
+</code></pre>
 </div>
   
   
@@ -179,17 +265,15 @@
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (2)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
 		
-		  <li><a href="/blog/20140215/memcached-usage-parameters-commands/">memcached专题：参数和命令解释</a></li>
+		  <li><a href="/blog/20140215/memcached-usage-parameters-commands/">memcached用法：参数和命令详解</a></li>
 		
-		  <li><a href="/blog/20140213/memcached-resource-libevent-repcached/">memcached专题：相关依赖资源-libevent-repcached</a></li>
-		
-		  <li><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">memcached专题：安装libevent-repcached-memcached</a></li>
+		  <li><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">memcached安装: libevent-repcached-memcached</a></li>
 		
 		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
 		

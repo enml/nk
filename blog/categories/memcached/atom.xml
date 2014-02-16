@@ -4,7 +4,7 @@
   <title><![CDATA[Category: memcached | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/memcached/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-02-15T23:10:35+08:00</updated>
+  <updated>2014-02-16T09:59:10+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[memcached专题：参数和命令解释]]></title>
+    <title type="html"><![CDATA[memcached用法：参数和命令详解]]></title>
     <link href="http://nkcoder.github.io/blog/20140215/memcached-usage-parameters-commands/"/>
     <updated>2014-02-15T23:02:36+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140215/memcached-usage-parameters-commands</id>
@@ -334,46 +334,18 @@ END
 <h4>参考</h4>
 
 <ul>
+<li><a href="https://code.google.com/p/memcached/wiki/NewStart">memcached wiki</a></li>
 <li><a href="http://www.zrwm.com/?p=642">memcached命令行操作</a></li>
 <li><a href="http://blog.csdn.net/wanghai__/article/details/8539435">memcached命令行参数说明</a></li>
+<li>[memcached详解](<a href="http://freeloda.blog.51cto.com/2033581/1289806%EF%BC%89">http://freeloda.blog.51cto.com/2033581/1289806%EF%BC%89</a></li>
+<li>[]</li>
 </ul>
 
 ]]></content>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[memcached专题：相关依赖资源-libevent-repcached]]></title>
-    <link href="http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached/"/>
-    <updated>2014-02-13T23:17:23+08:00</updated>
-    <id>http://nkcoder.github.io/blog/20140213/memcached-resource-libevent-repcached</id>
-    <content type="html"><![CDATA[<h3>1. <code>memcached</code></h3>
-
-<pre><code># yum info memcached
-</code></pre>
-
-<p>如果发行版自带的memcached版本太旧，进入<a href="https://code.google.com/p/memcached/">memcached网站</a>, 下载源码自己安装，当前最新版本位1.4.15.</p>
-
-<h3>2. <code>libevent-devel</code></h3>
-
-<pre><code># yum info libevent libevent-devel
-</code></pre>
-
-<p>如果yum安装的版本太旧，进入<a href="https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz">libevent网站</a>，下载源码自行安装，当前最新版本位2.0.21</p>
-
-<h3>3. <code>repcached</code></h3>
-
-<p>一种是补丁，一种是与memcached集成版。</p>
-
-<p>集成版<a href="https://github.com/mdounin/memcached/tree/repcached">下载地址</a>（最新支持1.4.13）</p>
-
-<p>补丁版<a href="http://mdounin.ru/files/repcached-2.3.1-1.4.13.patch.gz">下载地址</a> 或者<a href="https://github.com/usecide/repcached/">这里</a>；repcached的<a href="http://repcached.lab.klab.org/">官方网站</a>，但是好久没更新了。</p>
-
-<p>安装请参考前一篇博文：<a href="http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached/">Memcached安装libevent-repcached-memcached</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[memcached专题：安装libevent-repcached-memcached]]></title>
+    <title type="html"><![CDATA[memcached安装: libevent-repcached-memcached]]></title>
     <link href="http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached/"/>
     <updated>2014-02-13T07:58:41+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140213/memcached-install-libevent-repcached-memcached</id>
