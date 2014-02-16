@@ -2,7 +2,7 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>http://nkcoder.github.io/blog/20140104/java-string-source/</loc>
-        <lastmod>2014-02-13T21:17:08+08:00</lastmod>
+        <lastmod>2014-02-16T21:53:12+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/20140105/bash-for-loop-by-example/</loc>
@@ -39,20 +39,24 @@
         <lastmod>2014-02-16T09:54:32+08:00</lastmod>
     </url>
     <url>
+        <loc>http://nkcoder.github.io/blog/20140216/xmemcached-usage-with-spring/</loc>
+        <lastmod>2014-02-16T21:54:30+08:00</lastmod>
+    </url>
+    <url>
         <loc>http://nkcoder.github.io/about/</loc>
         <lastmod>2014-02-14T16:34:21+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/archives/</loc>
-        <lastmod>2014-02-16T09:54:32+08:00</lastmod>
+        <lastmod>2014-02-16T21:54:30+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/</loc>
-        <lastmod>2014-02-16T09:54:32+08:00</lastmod>
+        <lastmod>2014-02-16T21:54:30+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/</loc>
-        <lastmod>2014-02-16T09:54:32+08:00</lastmod>
+        <lastmod>2014-02-16T21:54:30+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/links.html</loc>

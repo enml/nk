@@ -4,7 +4,7 @@
   <title><![CDATA[Category: memcached | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/memcached/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-02-16T09:59:10+08:00</updated>
+  <updated>2014-02-16T21:54:35+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,228 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[xmemcached主要用法及与Spring集成]]></title>
+    <link href="http://nkcoder.github.io/blog/20140216/xmemcached-usage-with-spring/"/>
+    <updated>2014-02-16T21:35:36+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140216/xmemcached-usage-with-spring</id>
+    <content type="html"><![CDATA[<p>xMemcached是memcached的一个java客户端，基于java nio，支持memcached的所有协议。本文简要介绍xMemcached的基本用法，以及与Spring的集成配置。</p>
+
+<h3>xMemcached的主要方法示例</h3>
+
+<p>```java</p>
+
+<pre><code>/**
+ * XMemcachedClientBuilder是MemcachedClientBuilder的一个实现类，XMemcachedClient是MemcachedClient的一个实现类；
+ * 在实际使用中，应该使用接口，利用多态特性，这里直接使用实现类，是为了方便查看实现类的源码。
+ */
+/**
+ * MemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses("192.168.56.200:11211"));
+ * MemcachedClient memcachedClient = null;
+ */
+
+XMemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses("192.168.56.200:11211 192.168.56.200:11212"));
+XMemcachedClient xMemcachedClient = null;
+
+// 注意处理相关异常
+
+// 默认是采用余数哈希，可以修改为一致性哈希
+builder.setSessionLocator(new KetamaMemcachedSessionLocator());
+// 启用二进制协议，getAndTouch等方法仅在二进制协议中支持
+builder.setCommandFactory(new BinaryCommandFactory());
+
+// build the memcached client
+xMemcachedClient = (XMemcachedClient) builder.build();
+
+// set: 第一个参数是key，第二个参数是超时时间，第三个参数是value
+xMemcachedClient.set("first", 0, "tianjin");
+xMemcachedClient.add("second", 20, "chengdu");
+xMemcachedClient.replace("first", 0, "Beijing");
+
+// get：根据key获取value，第一个参数为key，第二个为超时；
+String firstValue = xMemcachedClient.get("first", new StringTranscoder());
+logger.info("get first value: {}", xMemcachedClient.get("first"));
+
+// delete: 删除item
+xMemcachedClient.delete("second");
+xMemcachedClient.set("third", 20, "xian");
+xMemcachedClient.deleteWithNoReply("third");
+
+// touch：修改item过期时间
+xMemcachedClient.touch("first", 0);
+firstValue = xMemcachedClient.getAndTouch("first", 10);
+logger.info("getAndTouch op, first value: {}", firstValue);
+
+// append, prepend: 追加数据
+xMemcachedClient.append("first", ", come on");
+xMemcachedClient.prepend("first", "hello ");
+logger.info("append and prepend op, first value: {}", xMemcachedClient.get("first"));
+
+/**
+ * cas: 通过gets操作返回GetResponse，其中包括value值和cas值
+ */
+GetsResponse&lt;String&gt; response = xMemcachedClient.gets("first");
+long cas = response.getCas();
+if (!xMemcachedClient.cas("first", 0, "guangzhou", cas)) {
+    logger.info("cas error");
+}
+
+// cas: 重试更方便；第一个方法表示重试次数，第二个方法表示更新的值
+xMemcachedClient.cas("first", 0, new CASOperation&lt;String&gt;() {
+    @Override
+    public int getMaxTries() {
+        return 1;
+    }
+
+    @Override
+    public String getNewValue(long currentCAS, String currentValue) {
+        return "xian";
+    }
+});
+logger.info("cas op, first value: {}", xMemcachedClient.get("first"));
+
+// incr/decr: 值的增加减少
+xMemcachedClient.incr("id", 3, 0);
+xMemcachedClient.incr("id", 5);
+xMemcachedClient.decr("id", 2);
+logger.info("incr/decr op, value: {}", xMemcachedClient.get("id"));
+
+// namespace: set时指定命名空间，get时也需要指定，可以使命名空间中的所有items失效
+String nsSohu = "sohu";
+xMemcachedClient.withNamespace(nsSohu, new MemcachedClientCallable&lt;Object&gt;() {
+    @Override
+    public Object call(MemcachedClient client) throws MemcachedException, InterruptedException, TimeoutException {
+        client.set("typeTv", 0, "tv");
+        client.set("typeMv", 0, "mv");
+        client.set("typeDrama", 0, "drama");
+        return null;
+    }
+});
+
+logger.info("namespace op, typeTv: {}", xMemcachedClient.withNamespace(nsSohu, new MemcachedClientCallable&lt;String&gt;() {
+    @Override
+    public String call(MemcachedClient client) throws MemcachedException, InterruptedException, TimeoutException {
+        return client.get("typeTv");
+    }
+}));
+xMemcachedClient.invalidateNamespace(nsSohu);
+
+// stats: 获取统计，也可以根据items获取统计
+Map&lt;InetSocketAddress, Map&lt;String, String&gt;&gt; stats = xMemcachedClient.getStats();
+for (InetSocketAddress addr: stats.keySet()) {
+    logger.info("stats map: {}: {}", addr, stats.get(addr).toString());
+}
+
+// flush_all: 是所有item都过期
+xMemcachedClient.flushAll("192.168.56.200:11211");
+
+// 删除一个server
+xMemcachedClient.removeServer("192.168.56.200:11212");
+</code></pre>
+
+<p>```</p>
+
+<h3>xMemcached与Spring集成</h3>
+
+<blockquote><p>applicationContext.xml的配置：</p></blockquote>
+
+<p>```java</p>
+
+<pre><code>&lt;!--定义一个server--&gt;
+&lt;bean name="server1" class="java.net.InetSocketAddress"&gt;
+    &lt;constructor-arg&gt;&lt;value&gt;192.168.56.200&lt;/value&gt;&lt;/constructor-arg&gt;
+    &lt;constructor-arg&gt;&lt;value&gt;11211&lt;/value&gt;&lt;/constructor-arg&gt;
+&lt;/bean&gt;
+
+&lt;!--定义XMemcachedClientBuilder实例，第一个参数设置server，第二个参数设置权重--&gt;
+&lt;bean id="memcachedClientBuilder" class="net.rubyeye.xmemcached.XMemcachedClientBuilder"&gt;
+    &lt;constructor-arg&gt;
+        &lt;list&gt;
+            &lt;bean class="java.net.InetSocketAddress"&gt;
+                &lt;constructor-arg&gt;&lt;value&gt;192.168.56.200&lt;/value&gt;&lt;/constructor-arg&gt;
+                &lt;constructor-arg&gt;&lt;value&gt;11211&lt;/value&gt;&lt;/constructor-arg&gt;
+            &lt;/bean&gt;
+            &lt;bean class="java.net.InetSocketAddress"&gt;
+                &lt;constructor-arg&gt;&lt;value&gt;192.168.56.200&lt;/value&gt;&lt;/constructor-arg&gt;
+                &lt;constructor-arg&gt;&lt;value&gt;11212&lt;/value&gt;&lt;/constructor-arg&gt;
+            &lt;/bean&gt;
+        &lt;/list&gt;
+    &lt;/constructor-arg&gt;
+    &lt;constructor-arg&gt;
+        &lt;list&gt;
+            &lt;value&gt;1&lt;/value&gt;
+            &lt;value&gt;2&lt;/value&gt;
+        &lt;/list&gt;
+    &lt;/constructor-arg&gt;
+
+    &lt;!--&amp;lt;!&amp;ndash;设置验证信息&amp;ndash;&amp;gt;--&gt;
+    &lt;!--&lt;property name="authInfoMap"&gt;--&gt;
+        &lt;!--&lt;map&gt;--&gt;
+            &lt;!--&lt;entry key-ref="server1"&gt;--&gt;
+                &lt;!--&lt;bean class="net.rubyeye.xmemcached.auth.AuthInfo" factory-method="typical"&gt;--&gt;
+                    &lt;!--&lt;constructor-arg index="0"&gt;&lt;value&gt;index&lt;/value&gt;&lt;/constructor-arg&gt;--&gt;
+                    &lt;!--&lt;constructor-arg index="1"&gt;&lt;value&gt;index-pd&lt;/value&gt;&lt;/constructor-arg&gt;--&gt;
+                &lt;!--&lt;/bean&gt;--&gt;
+            &lt;!--&lt;/entry&gt;--&gt;
+        &lt;!--&lt;/map&gt;--&gt;
+    &lt;!--&lt;/property&gt;--&gt;
+
+    &lt;!--设置线程池--&gt;
+    &lt;property name="connectionPoolSize" value="2"&gt;&lt;/property&gt;
+
+    &lt;!--使用二进制协议--&gt;
+    &lt;property name="commandFactory"&gt;
+        &lt;bean class="net.rubyeye.xmemcached.command.BinaryCommandFactory"&gt;&lt;/bean&gt;
+    &lt;/property&gt;
+
+   &lt;!--设置序列化方式--&gt;
+    &lt;property name="transcoder"&gt;
+        &lt;bean class="net.rubyeye.xmemcached.transcoders.SerializingTranscoder"&gt;&lt;/bean&gt;
+    &lt;/property&gt;
+
+    &lt;!--设置一致性哈希--&gt;
+    &lt;property name="sessionLocator"&gt;
+        &lt;bean class="net.rubyeye.xmemcached.impl.KetamaMemcachedSessionLocator"&gt;&lt;/bean&gt;
+    &lt;/property&gt;
+
+&lt;/bean&gt;
+
+&lt;!--定义memcachedClient，通过memcachedClientBuilder的build方法--&gt;
+&lt;bean name="memcachedClient" factory-bean="memcachedClientBuilder"
+      factory-method="build" destroy-method="shutdown"&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<p>```</p>
+
+<blockquote><p>java测试类：</p></blockquote>
+
+<p>```java</p>
+
+<pre><code>MemcachedClient memcachedClient = null;
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+try {
+    memcachedClient = (MemcachedClient) applicationContext.getBean("memcachedClient");
+    memcachedClient.set("spring", 0, "3.0.0.RELEASE");
+    logger.info("spring: {}", memcachedClient.get("spring"));
+    memcachedClient.replace("spring", 0, "4.0.0.RELEASE is coming");
+    logger.info("spring, {}", memcachedClient.get("spring"));
+} catch (Exception e) {
+    logger.info("spring test", e);
+}
+</code></pre>
+
+<p>```</p>
+
+<h4>参考</h4>
+
+<ul>
+<li><a href="https://code.google.com/p/xmemcached/wiki/User_Guide_zh">xmemcached user_guide_zh</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[memcached用法：参数和命令详解]]></title>
