@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>You Sharp</title>
+  <title>分布式搜索引擎ElasticSearch安装与配置 - You Sharp</title>
   <meta name="author" content="lingguo">
 
   
-  <meta name="description" content="blog about algorithm, Java Web, Linux, Python, Open Source...">
+  <meta name="description" content="分布式搜索引擎ElasticSearch的安装，插件安装以及配置说明">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://nkcoder.github.io">
+  <link rel="canonical" href="http://nkcoder.github.io/blog/20140217/elasticsearch-install-config">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -102,15 +102,13 @@
 </nav>
   <div class="container">
     <div class="row-fluid">
-      <div class="span9">
-  
-  
-  
-    <article>
       
+<article class="hentry span9" role="article">
+
+  
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></h1>
+      <h1 class="entry-title">分布式搜索引擎ElasticSearch安装与配置</h1>
     
     
       <p class="meta">
@@ -128,14 +126,14 @@
 
 <time datetime="2014-02-17T22:49:20+08:00" pubdate data-updated="true">Feb 17<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140217/elasticsearch-install-config/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. 安装与启动</h3>
+<div class="entry-content"><h3>1. 安装与启动</h3>
 
 <h4>1.1 安装ElasticSearch</h4>
 
@@ -237,20 +235,69 @@ discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
 </ul>
 
 </div>
+
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
+
   
 
 
-    </article>
+<time datetime="2014-02-17T22:49:20+08:00" pubdate data-updated="true">Feb 17<span>th</span>, 2014</time>
+      
+
+<span class="categories">
   
-  <ul class="pager">
+    <a class='category' href='/blog/categories/elasticsearch/'>elasticsearch</a>
+  
+</span>
+
+
+    </p>
     
-    <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
-    
-    <li><a href="/blog/archives">Blog Archives</a></li>
-    
-  </ul>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140217/elasticsearch-install-config/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140217/elasticsearch-install-config/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
 </div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/20140216/xmemcached-usage-with-spring/" title="Previous Post:
+        xmemcached主要用法及与Spring集成">&laquo; xmemcached主要用法及与Spring集成</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
 <aside class="sidebar-nav span3">
   
     <section>
@@ -287,6 +334,7 @@ discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
@@ -302,7 +350,10 @@ discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
       var disqus_shortname = 'nkcoder';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/20140217/elasticsearch-install-config/';
+        var disqus_url = 'http://nkcoder.github.io/blog/20140217/elasticsearch-install-config/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
