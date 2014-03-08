@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140216/xmemcached-usage-with-spring/">xmemcached主要用法及与Spring集成</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></h1>
     
     
       <p class="meta">
@@ -126,398 +126,114 @@
   
 
 
-<time datetime="2014-02-16T21:35:36+08:00" pubdate data-updated="true">Feb 16<span>th</span>, 2014</time>
+<time datetime="2014-02-17T22:49:20+08:00" pubdate data-updated="true">Feb 17<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140216/xmemcached-usage-with-spring/#disqus_thread">Comments</a>
+         | <a href="/blog/20140217/elasticsearch-install-config/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>xMemcached是memcached的一个java客户端，基于java nio，支持memcached的所有协议。本文简要介绍xMemcached的基本用法，以及与Spring的集成配置。</p>
+  <div class="entry-content"><h3>1. 安装与启动</h3>
 
-<h3>xMemcached的主要方法示例</h3>
+<h4>1.1 安装ElasticSearch</h4>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
-</span><span class='line'><span class="cm"> * XMemcachedClientBuilder是MemcachedClientBuilder的一个实现类，XMemcachedClient是MemcachedClient的一个实现类；</span>
-</span><span class='line'><span class="cm"> * 在实际使用中，应该使用接口，利用多态特性，这里直接使用实现类，是为了方便查看实现类的源码。</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="cm">/**</span>
-</span><span class='line'><span class="cm"> * MemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses(&quot;192.168.56.200:11211&quot;));</span>
-</span><span class='line'><span class="cm"> * MemcachedClient memcachedClient = null;</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">XMemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">XMemcachedClientBuilder</span><span class="o">(</span><span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="s">&quot;192.168.56.200:11211 192.168.56.200:11212&quot;</span><span class="o">));</span>
-</span><span class='line'><span class="n">XMemcachedClient</span> <span class="n">xMemcachedClient</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// 注意处理相关异常</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// 默认是采用余数哈希，可以修改为一致性哈希</span>
-</span><span class='line'><span class="n">builder</span><span class="o">.</span><span class="na">setSessionLocator</span><span class="o">(</span><span class="k">new</span> <span class="n">KetamaMemcachedSessionLocator</span><span class="o">());</span>
-</span><span class='line'><span class="c1">// 启用二进制协议，getAndTouch等方法仅在二进制协议中支持</span>
-</span><span class='line'><span class="n">builder</span><span class="o">.</span><span class="na">setCommandFactory</span><span class="o">(</span><span class="k">new</span> <span class="n">BinaryCommandFactory</span><span class="o">());</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// build the memcached client</span>
-</span><span class='line'><span class="n">xMemcachedClient</span> <span class="o">=</span> <span class="o">(</span><span class="n">XMemcachedClient</span><span class="o">)</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// set: 第一个参数是key，第二个参数是超时时间，第三个参数是value</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;tianjin&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;second&quot;</span><span class="o">,</span> <span class="mi">20</span><span class="o">,</span> <span class="s">&quot;chengdu&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;Beijing&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// get：根据key获取value，第一个参数为key，第二个为超时；</span>
-</span><span class='line'><span class="n">String</span> <span class="n">firstValue</span> <span class="o">=</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="n">StringTranscoder</span><span class="o">());</span>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;get first value: {}&quot;</span><span class="o">,</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// delete: 删除item</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">delete</span><span class="o">(</span><span class="s">&quot;second&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;third&quot;</span><span class="o">,</span> <span class="mi">20</span><span class="o">,</span> <span class="s">&quot;xian&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">deleteWithNoReply</span><span class="o">(</span><span class="s">&quot;third&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// touch：修改item过期时间</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">touch</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
-</span><span class='line'><span class="n">firstValue</span> <span class="o">=</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">getAndTouch</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">10</span><span class="o">);</span>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;getAndTouch op, first value: {}&quot;</span><span class="o">,</span> <span class="n">firstValue</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// append, prepend: 追加数据</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="s">&quot;, come on&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">prepend</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="s">&quot;hello &quot;</span><span class="o">);</span>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;append and prepend op, first value: {}&quot;</span><span class="o">,</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">));</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/**</span>
-</span><span class='line'><span class="cm"> * cas: 通过gets操作返回GetResponse，其中包括value值和cas值</span>
-</span><span class='line'><span class="cm"> */</span>
-</span><span class='line'><span class="n">GetsResponse</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">response</span> <span class="o">=</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">gets</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="kt">long</span> <span class="n">cas</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getCas</span><span class="o">();</span>
-</span><span class='line'><span class="k">if</span> <span class="o">(!</span><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">cas</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;guangzhou&quot;</span><span class="o">,</span> <span class="n">cas</span><span class="o">))</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;cas error&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// cas: 重试更方便；第一个方法表示重试次数，第二个方法表示更新的值</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">cas</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="k">new</span> <span class="n">CASOperation</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="nd">@Override</span>
-</span><span class='line'>  <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getMaxTries</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="mi">1</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="nd">@Override</span>
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">getNewValue</span><span class="o">(</span><span class="kt">long</span> <span class="n">currentCAS</span><span class="o">,</span> <span class="n">String</span> <span class="n">currentValue</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="s">&quot;xian&quot;</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">});</span>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;cas op, first value: {}&quot;</span><span class="o">,</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;first&quot;</span><span class="o">));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// incr/decr: 值的增加减少</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">incr</span><span class="o">(</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">incr</span><span class="o">(</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="mi">5</span><span class="o">);</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">decr</span><span class="o">(</span><span class="s">&quot;id&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;incr/decr op, value: {}&quot;</span><span class="o">,</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;id&quot;</span><span class="o">));</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// namespace: set时指定命名空间，get时也需要指定，可以使命名空间中的所有items失效</span>
-</span><span class='line'><span class="n">String</span> <span class="n">nsSohu</span> <span class="o">=</span> <span class="s">&quot;sohu&quot;</span><span class="o">;</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">withNamespace</span><span class="o">(</span><span class="n">nsSohu</span><span class="o">,</span> <span class="k">new</span> <span class="n">MemcachedClientCallable</span><span class="o">&lt;</span><span class="n">Object</span><span class="o">&gt;()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="nd">@Override</span>
-</span><span class='line'>  <span class="kd">public</span> <span class="n">Object</span> <span class="nf">call</span><span class="o">(</span><span class="n">MemcachedClient</span> <span class="n">client</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">MemcachedException</span><span class="o">,</span> <span class="n">InterruptedException</span><span class="o">,</span> <span class="n">TimeoutException</span> <span class="o">{</span>
-</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;typeTv&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;tv&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;typeMv&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;mv&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="n">client</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;typeDrama&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;drama&quot;</span><span class="o">);</span>
-</span><span class='line'>      <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">});</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;namespace op, typeTv: {}&quot;</span><span class="o">,</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">withNamespace</span><span class="o">(</span><span class="n">nsSohu</span><span class="o">,</span> <span class="k">new</span> <span class="n">MemcachedClientCallable</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="nd">@Override</span>
-</span><span class='line'>  <span class="kd">public</span> <span class="n">String</span> <span class="nf">call</span><span class="o">(</span><span class="n">MemcachedClient</span> <span class="n">client</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">MemcachedException</span><span class="o">,</span> <span class="n">InterruptedException</span><span class="o">,</span> <span class="n">TimeoutException</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="n">client</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;typeTv&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">}));</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">invalidateNamespace</span><span class="o">(</span><span class="n">nsSohu</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// stats: 获取统计，也可以根据items获取统计</span>
-</span><span class='line'><span class="n">Map</span><span class="o">&lt;</span><span class="n">InetSocketAddress</span><span class="o">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;&gt;</span> <span class="n">stats</span> <span class="o">=</span> <span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">getStats</span><span class="o">();</span>
-</span><span class='line'><span class="k">for</span> <span class="o">(</span><span class="n">InetSocketAddress</span> <span class="nl">addr:</span> <span class="n">stats</span><span class="o">.</span><span class="na">keySet</span><span class="o">())</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;stats map: {}: {}&quot;</span><span class="o">,</span> <span class="n">addr</span><span class="o">,</span> <span class="n">stats</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">addr</span><span class="o">).</span><span class="na">toString</span><span class="o">());</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// flush_all: 是所有item都过期</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">flushAll</span><span class="o">(</span><span class="s">&quot;192.168.56.200:11211&quot;</span><span class="o">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// 删除一个server</span>
-</span><span class='line'><span class="n">xMemcachedClient</span><span class="o">.</span><span class="na">removeServer</span><span class="o">(</span><span class="s">&quot;192.168.56.200:11212&quot;</span><span class="o">);</span>
-</span></code></pre></td></tr></table></div></figure>
+<blockquote><p>两种安装方式，一种是根据发行版，通过ElasticSearch提供的repositories安装，参考<a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html">官方指南</a>; 另一种是利用压缩包安装；由于第二种方式，在配置上更加灵活，这里主要介绍第二种方式的安装和配置。</p></blockquote>
 
+<p>从<a href="http://www.elasticsearch.org/overview/elkdownloads/">ElasticSearch网站</a>下载压缩包：<code>elasticsearch-1.0.0.tar.gz</code>，解压到指定目录：</p>
 
-<h3>xMemcached与Spring集成</h3>
+<pre><code>$ wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.0.0.tar.gz -P /opt/app
+$ cd /opt/app
+$ tar zxvf elasticsearch-1.0.0.tar.gz -C ./
+</code></pre>
 
-<blockquote><p>applicationContext.xml的配置：</p></blockquote>
+<blockquote><p>启动ElasticSearch很简单，执行安装目录下bin/elasticsearch即可；ElasticSearch 1.0.0的启动机制有一些变化，默认在前台运行，-d参数表示在后台运行；另外还提供-p参数，后接文件名，保存当前ElasticSearch进程的pid，方便关闭进程；</p></blockquote>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;!--</span><span class="err">定义一个</span><span class="n">server</span><span class="o">--&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">bean</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;server1&quot;</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;java.net.InetSocketAddress&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">56.200</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mi">11211</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;!--</span><span class="err">定义</span><span class="n">XMemcachedClientBuilder</span><span class="err">实例，第一个参数设置</span><span class="n">server</span><span class="err">，第二个参数设置权重</span><span class="o">--&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">bean</span> <span class="n">id</span><span class="o">=</span><span class="s">&quot;memcachedClientBuilder&quot;</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;net.rubyeye.xmemcached.XMemcachedClientBuilder&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="n">list</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;java.net.InetSocketAddress&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">56.200</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mi">11211</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;java.net.InetSocketAddress&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">56.200</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>                <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mi">11212</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;/</span><span class="n">list</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="n">list</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mi">1</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;</span>
-</span><span class='line'>            <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="mi">2</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;/</span><span class="n">list</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="o">&lt;!--&amp;</span><span class="n">lt</span><span class="o">;!&amp;</span><span class="n">ndash</span><span class="o">;</span><span class="err">设置验证信息</span><span class="o">&amp;</span><span class="n">ndash</span><span class="o">;&amp;</span><span class="n">gt</span><span class="o">;--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;!--&lt;</span><span class="n">property</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;authInfoMap&quot;</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>        <span class="o">&lt;!--&lt;</span><span class="n">map</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>            <span class="o">&lt;!--&lt;</span><span class="n">entry</span> <span class="n">key</span><span class="o">-</span><span class="n">ref</span><span class="o">=</span><span class="s">&quot;server1&quot;</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>                <span class="o">&lt;!--&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;net.rubyeye.xmemcached.auth.AuthInfo&quot;</span> <span class="n">factory</span><span class="o">-</span><span class="n">method</span><span class="o">=</span><span class="s">&quot;typical&quot;</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>                    <span class="o">&lt;!--&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span> <span class="n">index</span><span class="o">=</span><span class="s">&quot;0&quot;</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="n">index</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>                    <span class="o">&lt;!--&lt;</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span> <span class="n">index</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="o">&gt;&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="n">index</span><span class="o">-</span><span class="n">pd</span><span class="o">&lt;/</span><span class="n">value</span><span class="o">&gt;&lt;/</span><span class="n">constructor</span><span class="o">-</span><span class="n">arg</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>                <span class="o">&lt;!--&lt;/</span><span class="n">bean</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>            <span class="o">&lt;!--&lt;/</span><span class="n">entry</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>        <span class="o">&lt;!--&lt;/</span><span class="n">map</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;!--&lt;/</span><span class="n">property</span><span class="o">&gt;--&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="o">&lt;!--</span><span class="err">设置线程池</span><span class="o">--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">property</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;connectionPoolSize&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s">&quot;2&quot;</span><span class="o">&gt;&lt;/</span><span class="n">property</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="o">&lt;!--</span><span class="err">使用二进制协议</span><span class="o">--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">property</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;commandFactory&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;net.rubyeye.xmemcached.command.BinaryCommandFactory&quot;</span><span class="o">&gt;&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;/</span><span class="n">property</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>   <span class="o">&lt;!--</span><span class="err">设置序列化方式</span><span class="o">--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">property</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;transcoder&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;net.rubyeye.xmemcached.transcoders.SerializingTranscoder&quot;</span><span class="o">&gt;&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;/</span><span class="n">property</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="o">&lt;!--</span><span class="err">设置一致性哈希</span><span class="o">--&gt;</span>
-</span><span class='line'>    <span class="o">&lt;</span><span class="n">property</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;sessionLocator&quot;</span><span class="o">&gt;</span>
-</span><span class='line'>        <span class="o">&lt;</span><span class="n">bean</span> <span class="n">class</span><span class="o">=</span><span class="s">&quot;net.rubyeye.xmemcached.impl.KetamaMemcachedSessionLocator&quot;</span><span class="o">&gt;&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>    <span class="o">&lt;/</span><span class="n">property</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;!--</span><span class="err">定义</span><span class="n">memcachedClient</span><span class="err">，通过</span><span class="n">memcachedClientBuilder</span><span class="err">的</span><span class="n">build</span><span class="err">方法</span><span class="o">--&gt;</span>
-</span><span class='line'><span class="o">&lt;</span><span class="n">bean</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;memcachedClient&quot;</span> <span class="n">factory</span><span class="o">-</span><span class="n">bean</span><span class="o">=</span><span class="s">&quot;memcachedClientBuilder&quot;</span>
-</span><span class='line'>      <span class="n">factory</span><span class="o">-</span><span class="n">method</span><span class="o">=</span><span class="s">&quot;build&quot;</span> <span class="n">destroy</span><span class="o">-</span><span class="n">method</span><span class="o">=</span><span class="s">&quot;shutdown&quot;</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">bean</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
+<pre><code>$ bin/elasticsearch -d -p /tmp/es.pid
+$ kill `cat /tmp/es.pid`
+</code></pre>
 
+<blockquote><p>另外还有一种启动方式，通过serviceWrapper，可以更加方便地控制ElasticSearch的启动、关闭以及重启，在下一节<code>安装插件</code>中介绍。</p></blockquote>
 
-<blockquote><p>java测试类：</p></blockquote>
+<h4>1.2 安装插件</h4>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">MemcachedClient</span> <span class="n">memcachedClient</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</span><span class='line'><span class="n">ApplicationContext</span> <span class="n">applicationContext</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ClassPathXmlApplicationContext</span><span class="o">(</span><span class="s">&quot;applicationContext.xml&quot;</span><span class="o">);</span>
-</span><span class='line'><span class="k">try</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">memcachedClient</span> <span class="o">=</span> <span class="o">(</span><span class="n">MemcachedClient</span><span class="o">)</span> <span class="n">applicationContext</span><span class="o">.</span><span class="na">getBean</span><span class="o">(</span><span class="s">&quot;memcachedClient&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">memcachedClient</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;spring&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;3.0.0.RELEASE&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;spring: {}&quot;</span><span class="o">,</span> <span class="n">memcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;spring&quot;</span><span class="o">));</span>
-</span><span class='line'>  <span class="n">memcachedClient</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="s">&quot;spring&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;4.0.0.RELEASE is coming&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;spring, {}&quot;</span><span class="o">,</span> <span class="n">memcachedClient</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;spring&quot;</span><span class="o">));</span>
-</span><span class='line'><span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">&quot;spring test&quot;</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<p>ElasticSearch官方和社区提供了很多插件用于将集群和节点的状态可视化。推荐安装的插件有：elasticsearch-head， marvel，bigdesk，servicewrapper</p>
 
+<pre><code>// elasticsearch-head的安装与访问
+# bin/plugin --install mobz/elasticsearch-head
+http://localhost:9200/_plugin/head/
+
+// marvel的安装与访问
+# bin/plugin -i elasticsearch/marvel/latest
+http://localhost:9200/_plugin/marvel
+
+// bigdesk的安装与访问（当前不支持ElasticSearch 1.0.0）
+# bin/plugin --install lukas-vlcek/bigdesk
+http://localhost:9200/_plugin/bigdesk/
+</code></pre>
+
+<blockquote><p>下面介绍servicewrapper的使用：从<a href="https://github.com/elasticsearch/elasticsearch-servicewrapper">该链接</a>下载，解压后将service文件夹放到ElasticSearch安装目录下的bin目录下。</p></blockquote>
+
+<pre><code>$ wget https://github.com/elasticsearch/elasticsearch-servicewrapper/archive/master.zip -P /opt/app
+$ cd /opt/app
+$ unzip elasticsearch-servicewrapper-master -d ./
+$ mv elasticsearch-servicewrapper-master/service elasticsearch-1.0.0/bin/
+</code></pre>
+
+<blockquote><p>配置: 编辑elasticsearch.conf文件，主要是配置前两行：ES_HOME及ES_HEAP_SIZE</p></blockquote>
+
+<pre><code>$ vim bin/service/elasticsearch.conf
+// set.default.ES_HOME=/data/app/elasticsearch-1.0.0
+// set.default.ES_HEAP_SIZE=2048
+</code></pre>
+
+<blockquote><p>用法：bin/service/elasticsearch start | stop | restart | install | remove | console | condrestart | status</p></blockquote>
+
+<pre><code>$ bin/service/elasticsearch start
+</code></pre>
+
+<h3>2. 配置</h3>
+
+<blockquote><p>配置文件为{ES_HOME}/config目录下的elasticsearch.yml，主要对集群、节点、索引（分片和副本）以及持久化和集群发现机制等进行参数设置。这里对一些常见的配置进行简单的说明和示例，配置文件的详细解释和说明会单独写一篇文章。</p></blockquote>
+
+<pre><code>// 集群的名称，用于集群内节点的自动发现
+cluster.name: es-test
+
+// 节点的名称，标识一个节点
+node.name: node_79_75
+
+// 可以被选为主节点，同时可以存储数据
+node.master: true
+node.data: true
+
+//节点的分片和副本的数量
+index.number_of_shards: 3
+index.number_of_replicas: 1
+
+// 配置文件、索引数据以及日志和插件等的目录，如果不存在，新建即可
+path.conf: /data/app/elasticsearch-1.0.0/config
+path.data: /data/app/elasticsearch-1.0.0/data
+path.logs: /data/app/elasticsearch-1.0.0/logs
+path.plugins: /data/app/elasticsearch-1.0.0/plugins
+
+// 锁定内存，防止内存交换影响ES性能
+bootstrap.mlockall: true
+
+// 持久化策略，本次存储
+gateway.type: local
+
+// 启用单播，显式指定节点的发现，当节点不在同一网段，无法自动发现时，启动单播，指定要发现的节点列表
+// 比如当前节点的ip为10.10.79.75，与另两个节点不在同一网段，使用单播机制
+discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
+</code></pre>
 
 <h4>参考</h4>
 
 <ul>
-<li><a href="https://code.google.com/p/xmemcached/wiki/User_Guide_zh">xmemcached user_guide_zh</a></li>
+<li><a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">ElasticSearch reference</a></li>
+<li><a href="http://www.searchtech.pro/articles/2013/02/18/1361194291548.html">ElasticSearch配置文件详解</a></li>
 </ul>
 
 </div>
@@ -541,11 +257,13 @@
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>spring (1)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li><li><a href='/blog/categories/yuan-ma-xue-xi/'>源码学习 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></li>
 		
 		  <li><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></li>
 		
@@ -564,8 +282,6 @@
 		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
 		
 		  <li><a href="/blog/20140105/vim-basic-usage/">vim 常用的基本操作</a></li>
-		
-		  <li><a href="/blog/20140105/bash-for-loop-by-example/">bash for循环用法示例</a></li>
 		
   	</ul>
 </section>
