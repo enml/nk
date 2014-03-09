@@ -5,7 +5,7 @@ description: Java API String.java的主要源码的分析和学习
 date: 2014-01-04 00:27:12 +0800
 comments: true
 tags: source code, String.java 
-categories: 源码学习
+categories: Java 
 ---
 
 ### 1. 存储结构
