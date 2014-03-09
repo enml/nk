@@ -48,7 +48,11 @@
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/20140308/spring-di-xml/</loc>
-        <lastmod>2014-03-08T21:55:55+08:00</lastmod>
+        <lastmod>2014-03-08T21:59:23+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://nkcoder.github.io/blog/20140309/spring-di-annotation/</loc>
+        <lastmod>2014-03-09T18:20:14+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/about/</loc>
@@ -56,15 +60,15 @@
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/archives/</loc>
-        <lastmod>2014-03-08T21:55:55+08:00</lastmod>
+        <lastmod>2014-03-09T18:20:14+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/blog/</loc>
-        <lastmod>2014-03-08T21:55:55+08:00</lastmod>
+        <lastmod>2014-03-09T18:20:14+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/</loc>
-        <lastmod>2014-03-08T21:55:55+08:00</lastmod>
+        <lastmod>2014-03-09T18:20:14+08:00</lastmod>
     </url>
     <url>
         <loc>http://nkcoder.github.io/links.html</loc>
