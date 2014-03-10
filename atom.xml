@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-09T20:26:17+08:00</updated>
+  <updated>2014-03-10T23:37:20+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,107 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Spring依赖注入之Java注解]]></title>
+    <link href="http://nkcoder.github.io/blog/20140310/spring-di-java/"/>
+    <updated>2014-03-10T23:29:44+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140310/spring-di-java</id>
+    <content type="html"><![CDATA[<blockquote><p>基于Java的注解，是在类级别上定义beans，在方法级别上定义bean。和自动注解一样，可以减少xml的配置。</p></blockquote>
+
+<h3>1. xml配置</h3>
+
+<p>在xml配置文件中添加自动扫描的配置：</p>
+
+<pre><code>&lt;context:component-scan base-package="org.yousharp"/&gt;
+</code></pre>
+
+<blockquote><p>该配置不仅扫描构造型注解(@Controller, @Service, @Repository, @Component)，也会扫描@Configuration注解。</p></blockquote>
+
+<h3>2. 定义dao类和service类</h3>
+
+<p>dao类是service类的一个属性，是需要注入的对象。</p>
+
+<pre><code>public class VideoService {
+    SaveVideoInfoDao saveVideoInfoDao;
+
+    public VideoService(){}
+
+    public VideoService(SaveVideoInfoDao saveVideoInfoDao) {
+        this.saveVideoInfoDao = saveVideoInfoDao;
+    }
+
+    public void saveVideoInfo(String info) {
+        saveVideoInfoDao.printMesg(info);
+    }
+}
+
+public class SaveVideoInfoDao {
+
+    public void printMesg(String message) {
+        System.out.println("saving video info....");
+    }
+}
+</code></pre>
+
+<blockquote><p>dao类和service类就是两个很普通的java类，没有任何注解依附。</p></blockquote>
+
+<h3>3. 定义一个配置类</h3>
+
+<p>单独定义一个配置类（在自动扫描包下），在类上使用@Configuration注解，在方法上使用@Bean注解：</p>
+
+<pre><code>@Configuration
+public class AppConfig {
+
+    @Bean
+    public SaveVideoInfoDao saveVideoInfoDao() {
+        return new SaveVideoInfoDao();
+    }
+
+    @Bean
+    public VideoService videoService() {
+        VideoService videoService = new VideoService(saveVideoInfoDao());
+        return videoService;
+    }
+}
+</code></pre>
+
+<blockquote><p>@Configuration注解等价于xml配置中的<code>beans</code>，该注解告诉Spring该类中包含一个或多个bean的定义；@Bean注解等价于xml配置中的<code>bean</code>，将方法返回的对象定义为bean，方法名为bean的id；上面第一个bean的定义等价于xml配置：</p></blockquote>
+
+<pre><code>&lt;bean id="saveInfoDao" class="org.yousharp.AppConfig"/&gt;
+</code></pre>
+
+<p>第二个bean的定义通过构造函数实现依赖注入，其含义等价于xml配置：</p>
+
+<pre><code>&lt;bean id="videoService" class="org.yousharp.AppConfig"&gt;
+    &lt;constructor-arg name="videoService" ref="saveVideoInfoDao"&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<p>这里是通过构造函数实现注入，当然也可以通过setter方法实现注入。在VideoInfoService中去掉带参数的构造函数，同时对属性saveVideoInfoDao添加setter方法，修改AppConfig类中的第二个bean为：</p>
+
+<pre><code>@Bean
+public VideoService videoService() {
+    VideoService videoService = new VideoService();
+    videoService.setSaveVideoInfoDao(saveVideoInfoDao());
+    return videoService;
+}
+</code></pre>
+
+<h3>4. Controller中引用</h3>
+
+<p>Controller里和使用xml配置bean和自动注解一样，通过bean的id获取对bean的引用。这里VideoService的bean的id为videoService。</p>
+
+<pre><code>ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+public void execute() {
+    VideoService videoService = (VideoService) context.getBean("videoService");
+    String videoInfo = "vrs video info";
+    videoService.saveVideoInfo(videoInfo);
+}
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Spring依赖注入之注解注入]]></title>

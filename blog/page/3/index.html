@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></h1>
     
     
       <p class="meta">
@@ -126,116 +126,191 @@
   
 
 
-<time datetime="2014-02-17T22:49:20+08:00" pubdate data-updated="true">Feb 17<span>th</span>, 2014</time>
+<time datetime="2014-03-08T21:36:47+08:00" pubdate data-updated="true">Mar 8<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140217/elasticsearch-install-config/#disqus_thread">Comments</a>
+         | <a href="/blog/20140308/spring-di-xml/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. 安装与启动</h3>
+  <div class="entry-content"><blockquote><p>因为项目中一直要用到Spring相关的知识，所以最近在看<a href="http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&amp;qid=1394286577&amp;sr=8-1&amp;keywords=spring%E5%AE%9E%E6%88%98">Spring实战</a>这本书，希望对Spring有一个整理的了解和把握。不得不说，这是一本好书，中文译本也不错。这个系列，记录自己关于Spring的笔记和理解，一是加深理解，同时也希望对别人有所帮助。</p></blockquote>
 
-<h4>1.1 安装ElasticSearch</h4>
+<h3>1. 通过构造方法和xml配置注入</h3>
 
-<blockquote><p>两种安装方式，一种是根据发行版，通过ElasticSearch提供的repositories安装，参考<a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html">官方指南</a>; 另一种是利用压缩包安装；由于第二种方式，在配置上更加灵活，这里主要介绍第二种方式的安装和配置。</p></blockquote>
+<blockquote><p>定义带参数的构造函数，使依赖对象作为构造函数的参数：</p></blockquote>
 
-<p>从<a href="http://www.elasticsearch.org/overview/elkdownloads/">ElasticSearch网站</a>下载压缩包：<code>elasticsearch-1.0.0.tar.gz</code>，解压到指定目录：</p>
+<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
+    VideoInfoDao videoInfoDao;
 
-<pre><code>$ wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.0.0.tar.gz -P /opt/app
-$ cd /opt/app
-$ tar zxvf elasticsearch-1.0.0.tar.gz -C ./
+    public VideoInfoServiceImpl() {}
+
+    public VideoInfoServiceImpl(VideoInfoDao videoInfoDao) {
+        this.videoInfoDao = videoInfoDao;
+    }
+
+    @Override
+    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
+        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
+        return videoList;
+    }
+}
 </code></pre>
 
-<blockquote><p>启动ElasticSearch很简单，执行安装目录下bin/elasticsearch即可；ElasticSearch 1.0.0的启动机制有一些变化，默认在前台运行，-d参数表示在后台运行；另外还提供-p参数，后接文件名，保存当前ElasticSearch进程的pid，方便关闭进程；</p></blockquote>
+<blockquote><p>在定义bean时，使用<code>constructor-arg</code>标签，name表示构造函数的参数，ref表示引用另一个bean；参数也可以为基本类型，此时使用value标签，而不是ref。(如果不使用<code>constructor-arg</code>，则bean实例化时调用的是默认的不带参数的构造函数)</p></blockquote>
 
-<pre><code>$ bin/elasticsearch -d -p /tmp/es.pid
-$ kill `cat /tmp/es.pid`
+<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;constructor-arg name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
+&lt;/bean&gt;
+
+&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;constructor-arg name="id" value="25"/&gt;
+&lt;/bean&gt;
 </code></pre>
 
-<blockquote><p>另外还有一种启动方式，通过serviceWrapper，可以更加方便地控制ElasticSearch的启动、关闭以及重启，在下一节<code>安装插件</code>中介绍。</p></blockquote>
+<h3>2. 通过setter方法和xml配置注入</h3>
 
-<h4>1.2 安装插件</h4>
+<blockquote><p>定义依赖对象的setter方法，在bean定义时，使用<code>property</code>标签表示调用指定属性的setter方法，实现注入：</p></blockquote>
 
-<p>ElasticSearch官方和社区提供了很多插件用于将集群和节点的状态可视化。推荐安装的插件有：elasticsearch-head， marvel，bigdesk，servicewrapper</p>
+<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
+    VideoInfoDao videoInfoDao;
 
-<pre><code>// elasticsearch-head的安装与访问
-# bin/plugin --install mobz/elasticsearch-head
-http://localhost:9200/_plugin/head/
+    @Override
+    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
+        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
+        return videoList;
+    }
 
-// marvel的安装与访问
-# bin/plugin -i elasticsearch/marvel/latest
-http://localhost:9200/_plugin/marvel
-
-// bigdesk的安装与访问（当前不支持ElasticSearch 1.0.0）
-# bin/plugin --install lukas-vlcek/bigdesk
-http://localhost:9200/_plugin/bigdesk/
+    public void setVideoInfoDao(VideoInfoDao videoInfoDao) {
+        this.videoInfoDao = videoInfoDao;
+    }
+}
 </code></pre>
 
-<blockquote><p>下面介绍servicewrapper的使用：从<a href="https://github.com/elasticsearch/elasticsearch-servicewrapper">该链接</a>下载，解压后将service文件夹放到ElasticSearch安装目录下的bin目录下。</p></blockquote>
+<blockquote><p>property指定属性为videoInfoDao，则bean实例化后调用setVideoInfoDao方法实现注入；ref表示引用另一个bean，value表示基本类型值，int, float, true等。</p></blockquote>
 
-<pre><code>$ wget https://github.com/elasticsearch/elasticsearch-servicewrapper/archive/master.zip -P /opt/app
-$ cd /opt/app
-$ unzip elasticsearch-servicewrapper-master -d ./
-$ mv elasticsearch-servicewrapper-master/service elasticsearch-1.0.0/bin/
+<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
+&lt;/bean&gt;
 </code></pre>
 
-<blockquote><p>配置: 编辑elasticsearch.conf文件，主要是配置前两行：ES_HOME及ES_HEAP_SIZE</p></blockquote>
+<blockquote><p>此时也可以通过<code>bean</code>的p属性实现注入，比较简洁，需要加入p命令空间，和<code>property</code>方式是等价的。</p></blockquote>
 
-<pre><code>$ vim bin/service/elasticsearch.conf
-// set.default.ES_HOME=/data/app/elasticsearch-1.0.0
-// set.default.ES_HEAP_SIZE=2048
+<pre><code>xmlns:p="http://www.springframework.org/schema/p"
+
+&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
+        p:videoInfoDao-ref="videoInfoDaoImpl" /&gt;
 </code></pre>
 
-<blockquote><p>用法：bin/service/elasticsearch start | stop | restart | install | remove | console | condrestart | status</p></blockquote>
+<h3>3. 通过SpEL表达式注入</h3>
 
-<pre><code>$ bin/service/elasticsearch start
+<blockquote><p>SpEL可以实现在运行时装配。SpEL通过#{}获取变量的值，{}中既可以是值类型，也可以是引用类型，通过bean的id引用其它的bean，此时，在SpEL中通过value引用其它的bean和通过ref直接引用bean的效果是相同的。</p></blockquote>
+
+<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;!--&lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;--&gt;
+    &lt;property name="videoInfoDao" value="#{videoInfoDaoImpl}" /&gt;
+&lt;/bean&gt;
 </code></pre>
 
-<h3>2. 配置</h3>
+<h3>4. 通过setter方法和autowire=&ldquo;byName&#8221;自动装配注入</h3>
 
-<blockquote><p>配置文件为{ES_HOME}/config目录下的elasticsearch.yml，主要对集群、节点、索引（分片和副本）以及持久化和集群发现机制等进行参数设置。这里对一些常见的配置进行简单的说明和示例，配置文件的详细解释和说明会单独写一篇文章。</p></blockquote>
+<blockquote><p>根据bean的名字进行注入，使用autowire=&ldquo;byName&#8221;，则寻找与属性名字相同的bean，通过属性的setter方法注入。</p></blockquote>
 
-<pre><code>// 集群的名称，用于集群内节点的自动发现
-cluster.name: es-test
-
-// 节点的名称，标识一个节点
-node.name: node_79_75
-
-// 可以被选为主节点，同时可以存储数据
-node.master: true
-node.data: true
-
-//节点的分片和副本的数量
-index.number_of_shards: 3
-index.number_of_replicas: 1
-
-// 配置文件、索引数据以及日志和插件等的目录，如果不存在，新建即可
-path.conf: /data/app/elasticsearch-1.0.0/config
-path.data: /data/app/elasticsearch-1.0.0/data
-path.logs: /data/app/elasticsearch-1.0.0/logs
-path.plugins: /data/app/elasticsearch-1.0.0/plugins
-
-// 锁定内存，防止内存交换影响ES性能
-bootstrap.mlockall: true
-
-// 持久化策略，本次存储
-gateway.type: local
-
-// 启用单播，显式指定节点的发现，当节点不在同一网段，无法自动发现时，启动单播，指定要发现的节点列表
-// 比如当前节点的ip为10.10.79.75，与另两个节点不在同一网段，使用单播机制
-discovery.zen.ping.multicast.enabled: false
-discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
+<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
+&lt;bean id="videoService" class="org.service.VideoService" autowire="byName"/&gt;
 </code></pre>
 
-<h4>参考</h4>
+<h3>5. 通过setter方法和autowire=&ldquo;byType&#8221;自动装配注入</h3>
 
-<ul>
-<li><a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html">ElasticSearch reference</a></li>
-<li><a href="http://www.searchtech.pro/articles/2013/02/18/1361194291548.html">ElasticSearch配置文件详解</a></li>
-</ul>
+<blockquote><p>根据bean的类型进行注入，使用autowire=&ldquo;byType&#8221;，则寻找与属性名字相同的bean，通过属性的setter方法注入：</p></blockquote>
 
+<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
+&lt;bean id="videoService" class="org.service.VideoService" autowire="byType"/&gt;
+</code></pre>
+
+<h3>6. 通过factory-method给单例类定义bean</h3>
+
+<blockquote><p>如果类的构造函数不可用，比如单例类，构造函数私有，通过public的接口获取实例；定义单例类的bean时，使用<code>factory-method</code>，表示调用类的静态方法构造实例：</p></blockquote>
+
+<pre><code>&lt;bean id="singleton" class="yousharp.Singleton" factory-method="getInstance"/&gt;
+&lt;bean id="factoryService" class="yousharp.FactoryService"&gt;
+    &lt;constructor-arg name="singleton" ref="singleton"/&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<h3>7. 定义bean的作用域</h3>
+
+<blockquote><p>默认是singleton，可以设置scope属性为prototype，表示每次调用都创建一个新实例：</p></blockquote>
+
+<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
+    scope="prototype"/&gt;
+</code></pre>
+
+<h3>8. 装配list</h3>
+
+<blockquote><p>数组或Collection的任意实现如List, ArrayList等都可以使用list和set来装配，区别在于set中不允许有重复元素。定义list成员的setter方法：</p></blockquote>
+
+<pre><code>private List&lt;VideoInfoDao&gt; videoInfoDaoList;
+
+public void setVideoInfoDaoList(List&lt;VideoInfoDao&gt; videoInfoDaoList) {
+    this.videoInfoDaoList = videoInfoDaoList;
+}
+</code></pre>
+
+<blockquote><p>在xml配置文件里，在<code>property</code>里定义<code>list</code>，给list成员注入实例：</p></blockquote>
+
+<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;property name="videoInfoDaoList"&gt;
+        &lt;list&gt;
+            &lt;ref bean="jdbcDaoImple"/&gt;
+            &lt;ref bean="mybatisDaoImpl"/&gt;
+            &lt;ref bean="hibernateDaoImpl"/&gt;
+        &lt;/list&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<h3>9. 装配map</h3>
+
+<blockquote><p>如果需要对一个map成员变量进行注入，在<code>property</code>里，通过<code>map</code>来实现注入，其中key和value都可以是值类型或引用类型；</p></blockquote>
+
+<pre><code>private Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap ;
+
+public void setVideoInfoDaoList(Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap) {
+    this.videoInfoDaoMap = videoInfoDaoMap;
+}
+
+&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
+    &lt;property name="videoInfoDaoList"&gt;
+        &lt;map&gt;
+            &lt;entry key="jdbc" value-ref="videoInfoDaoImpl"/&gt;
+            &lt;entry key="mybatis" value-ref="videoInfoDaoImpl"/&gt;
+            &lt;entry key="hibernate" value-ref="videoInfoDaoImpl"/&gt;
+        &lt;/map&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<h3>10. 装配property</h3>
+
+<blockquote><p>property也是key-value对，与map的区别是，其key和value必须都是String类型。</p></blockquote>
+
+<pre><code>Properties props;
+public void setProps(Properties props) {
+    this.props = props;
+}
+
+&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl" &gt;
+    &lt;property name="props"&gt;
+        &lt;props&gt;
+            &lt;prop key="daily"&gt;30 00 * * *&lt;/prop&gt;
+            &lt;prop key="weekly"&gt;30 00 * * 1&lt;/prop&gt;
+            &lt;prop key="monthly"&gt;30 00 * 1 *&lt;/prop&gt;
+        &lt;/props&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
 </div>
   
   
@@ -257,11 +332,13 @@ discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (2)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (3)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140310/spring-di-java/">Spring依赖注入之Java注解</a></li>
 		
 		  <li><a href="/blog/20140309/spring-di-annotation/">Spring依赖注入之注解注入</a></li>
 		
@@ -280,8 +357,6 @@ discovery.zen.ping.unicast.hosts: ["10.11.52.131:9300", "10.11.52.134:9300"]
 		  <li><a href="/blog/20140111/diary/">2014-01-11 日记</a></li>
 		
 		  <li><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化一则</a></li>
-		
-		  <li><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></li>
 		
   	</ul>
 </section>
