@@ -133,9 +133,9 @@
   </header>
 
 
-<div class="entry-content"><p>依赖注入（DI）有助于应用对象之间的解耦，而面向q切面编程（AOP）有助于横切关注点与所影响的对象之间的解耦。所谓横切关注点，即影响应用多处的功能，这些功能各个应用模块都需要，但又不是其主要关注点，常见的横切关注点有日志、事务和安全等。</p>
+<div class="entry-content"><p>依赖注入（DI）有助于应用对象之间的解耦，而面向切面编程（AOP）有助于横切关注点与所影响的对象之间的解耦。所谓横切关注点，即影响应用多处的功能，这些功能各个应用模块都需要，但又不是其主要关注点，常见的横切关注点有日志、事务和安全等。</p>
 
-<p>将横切关注点抽离形成独立的类，即形成了切面。切面主要有切点和通知构成，通知定义了切面是什么，以及何时执行何种操作；切点定义了在何处执行通知定义的操作。</p>
+<p>将横切关注点抽离形成独立的类，即形成了切面。切面主要由切点和通知构成，通知定义了切面是什么，以及何时执行何种操作；切点定义了在何处执行通知定义的操作。</p>
 
 <p>下面以简单的日志作为切面，分别介绍通过xml配置和注解实现AOP。</p>
 
@@ -194,7 +194,7 @@ public class LogService {
 &lt;/aop:config&gt;
 </code></pre>
 
-<blockquote><p><code>aop:aspect</code>通过ref引用<em>logService</em> bean，将<em>LogService</em>定义为切面。<code>aop:pointcut</code>定义一个切点，被通知的对象通过<em>execution</em>表达式指定，即当<em>VideoService</em>下的任意方法被执行时，触发切面。<code>aop:aroud</code>定义一个环绕通知，引用切点*serviceLog<code>，当切面被触发时，调用</code>method`指定的方法。</p></blockquote>
+<blockquote><p><code>aop:aspect</code>通过ref引用<code>logService</code> bean，将<code>LogService</code>定义为切面。<code>aop:pointcut</code>定义一个切点，被通知的对象通过<code>execution</code>表达式指定，即当<code>VideoService</code>下的任意方法被执行时，触发切面。<code>aop:aroud</code>定义一个环绕通知，引用切点*serviceLog<code>，当切面被触发时，调用</code>method`指定的方法。</p></blockquote>
 
 <h3>2. 通过注解实现</h3>
 
