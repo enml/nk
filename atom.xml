@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-10T23:37:20+08:00</updated>
+  <updated>2014-03-13T23:01:29+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,104 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Spring AOP之入门实例]]></title>
+    <link href="http://nkcoder.github.io/blog/20140313/spring-aop-example/"/>
+    <updated>2014-03-13T22:58:06+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140313/spring-aop-example</id>
+    <content type="html"><![CDATA[<p>依赖注入（DI）有助于应用对象之间的解耦，而面向q切面编程（AOP）有助于横切关注点与所影响的对象之间的解耦。所谓横切关注点，即影响应用多处的功能，这些功能各个应用模块都需要，但又不是其主要关注点，常见的横切关注点有日志、事务和安全等。</p>
+
+<p>将横切关注点抽离形成独立的类，即形成了切面。切面主要有切点和通知构成，通知定义了切面是什么，以及何时执行何种操作；切点定义了在何处执行通知定义的操作。</p>
+
+<p>下面以简单的日志作为切面，分别介绍通过xml配置和注解实现AOP。</p>
+
+<h3>0. 添加依赖</h3>
+
+<p>因为Spring AOP用到AspectJ的相关对象和注解，需要添加AspectJ的依赖：</p>
+
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+    &lt;artifactId&gt;aspectjrt&lt;/artifactId&gt;
+    &lt;version&gt;1.7.4&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.aspectj&lt;/groupId&gt;
+    &lt;artifactId&gt;aspectjweaver&lt;/artifactId&gt;
+    &lt;version&gt;1.7.4&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-aop&lt;/artifactId&gt;
+    &lt;version&gt;${spring.version}&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
+<h3>1. 通过XML配置实现</h3>
+
+<p>1.1 将日志类作为切面，定义为bean即可：</p>
+
+<pre><code>@Service("logService")
+public class LogService {
+    private Logger logger = LoggerFactory.getLogger(LogService.class);
+
+    public void printLog(ProceedingJoinPoint joinPoint) throws Throwable{
+        logger.info("before service is called...");
+
+        String methodModifier = joinPoint.getSignature().getDeclaringTypeName();
+        String methodName = joinPoint.getSignature().getName();
+        Object[] argsArr = joinPoint.getArgs();
+        logger.info("class: {}; method: {}; args: {}", methodModifier, methodName, Arrays.toString(argsArr));
+        joinPoint.proceed();
+
+        logger.info("after service is called....");
+    }
+}
+</code></pre>
+
+<blockquote><p>首先，通过@Service注解将类定义为bean；方法printLog的参数<code>ProceedingJoinPoint</code>对象属于<code>AspectJ</code>，通过这个对象可以获取被通知的对象和方法的信息，并通过<code>proceed</code>方法执行被通知的对象。</p></blockquote>
+
+<p>1.2 在xml配置文件里定义切面和切点</p>
+
+<pre><code>&lt;aop:config&gt;
+    &lt;aop:aspect ref="logService"&gt;
+        &lt;aop:pointcut id="serviceLog" expression="execution(* org.yousharp.service.VideoService..*(..))"/&gt;
+        &lt;aop:around method="printLog" pointcut-ref="serviceLog"/&gt;
+    &lt;/aop:aspect&gt;
+&lt;/aop:config&gt;
+</code></pre>
+
+<blockquote><p><code>aop:aspect</code>通过ref引用<em>logService</em> bean，将<em>LogService</em>定义为切面。<code>aop:pointcut</code>定义一个切点，被通知的对象通过<em>execution</em>表达式指定，即当<em>VideoService</em>下的任意方法被执行时，触发切面。<code>aop:aroud</code>定义一个环绕通知，引用切点*serviceLog<code>，当切面被触发时，调用</code>method`指定的方法。</p></blockquote>
+
+<h3>2. 通过注解实现</h3>
+
+<p>通过注解，可以直接在类上定义切面、通知和切点，无需任何xml配置。</p>
+
+<pre><code>@Service("logService")
+@Aspect
+public class LogService {
+    private Logger logger = LoggerFactory.getLogger(LogService.class);
+
+    @Pointcut(value = "execution(* org.yousharp.service.VideoService.saveVideoInfo(..))")
+    public void saveVideo() { }
+
+    @Around(value = "saveVideo()")
+    public void printLog(ProceedingJoinPoint joinPoint) throws Throwable{
+        logger.info("before service is called...");
+        String methodModifier = joinPoint.getSignature().getDeclaringTypeName();
+        String methodName = joinPoint.getSignature().getName();
+        Object[] argsArr = joinPoint.getArgs();
+        logger.info("class: {}; method: {}; args: {}", methodModifier, methodName, Arrays.toString(argsArr));
+        joinPoint.proceed();
+
+        logger.info("after service is called....");
+    }
+}
+</code></pre>
+
+<blockquote><p><code>@Aspect</code>注解表示将该类定义为切面，<code>@Pointcut</code>定义切点，execution表达式与xml配置一样；切点的id即为空方法的方法名（这里的方法内容不重要，主要是供切点依附），这里即为saveVideo；<code>@Around</code>表示定义环绕通知，需要引用切点。</p></blockquote>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Spring依赖注入之Java注解]]></title>
