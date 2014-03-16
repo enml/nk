@@ -95,3 +95,7 @@ categories: Spring
 
 > `@Aspect`注解表示将该类定义为切面，`@Pointcut`定义切点，execution表达式与xml配置一样；切点的id即为空方法的方法名（这里的方法内容不重要，主要是供切点依附），这里即为saveVideo；`@Around`表示定义环绕通知，需要引用切点。
 
+#### 参考资料
+
++ [Spring实战(第3版)](http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&qid=1394943496&sr=8-1&keywords=spring+in+action)
+

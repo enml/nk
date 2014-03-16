@@ -83,3 +83,8 @@ categories: Spring
     </context:component-scan>
 
 > `context:include-filter`表示需要扫描并注解的类，`context:exclude-filter`表示扫描时需要排除的包；`type`一种有5中，`assignable`表示继承自`expression`所指定的包，`annotation`表示所有expression所指定的注解。
+
+#### 参考资料
+
++ [Spring实战(第3版)](http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&qid=1394943496&sr=8-1&keywords=spring+in+action)
+
