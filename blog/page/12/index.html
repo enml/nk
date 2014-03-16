@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140105/github-pages-and-octopress-blog-built/">使用github pages和Octopress搭建静态博客及配置</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140107/mysql-optimize-in-project/">MySql优化一则</a></h1>
     
     
       <p class="meta">
@@ -126,290 +126,81 @@
   
 
 
-<time datetime="2014-01-05T22:07:11+08:00" pubdate data-updated="true">Jan 5<span>th</span>, 2014</time>
+<time datetime="2014-01-07T21:38:18+08:00" pubdate data-updated="true">Jan 7<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140105/github-pages-and-octopress-blog-built/#disqus_thread">Comments</a>
+         | <a href="/blog/20140107/mysql-optimize-in-project/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><blockquote><p>初衷：其实，前不久才购买的域名和主机，使用wordpress搭建的博客，但是wordpress功能完善地有些笨拙，再加上购买的主机速度慢地难以忍受，连写博客的欲望都没有了。后来发现github pages和Octopress可以组合搭建静态博客，托管在github上，既稳定又方便，我只要关注博客就行了。所以这两天都在折腾。</p></blockquote>
+  <div class="entry-content"><h3>1. 提出问题</h3>
 
-<h3>1. 环境准备</h3>
+<p>根据视频的播放数实现排行榜。需要关联4张表：专辑表、视频表、专辑和视频的关联表以及视频的播放数日增表，日增表的日数据大概在2万条左右。出排行榜的sql如下：</p>
 
-<h4>1.1 下载软件：<code>RubyInstaller</code>，<code>Devkit</code>，<code>git</code></h4>
-
-<p>先在下载地址<a href="http://rubyinstaller.org/downloads/">rubyinstaller</a>看说明，当前建议下载1.9.3稳定版<code>RubyInstaller</code>：<code>Ruby 1.9.3-p484</code>和<code>DevKit-tdm-32-4.5.2-20111229-1559-sfx.exe</code>。（我因为下载的时2.0版，后来配置的时候报错了，版本改为1.9.3就ok了）
-git可以下载最新版的<a href="https://code.google.com/p/msysgit/downloads/list">msysgit</a>即可。</p>
-
-<h4>1.2 安装ruby</h4>
-
-<p>安装RubyInstaller，注意不要安装在带有空格的目录中，如C:\Program Files，否则后面有些命令可能会出错；安装时选择将可执行路径加入到PATH环境变量中。Devkit解压即可，然后进入devkit目录，执行安装命令：</p>
-
-<pre><code>$ cd Devkit
-$ ruby dk.rb init
-$ ruby dk.rb install    
+<pre><code>SELECT
+    vts.TV_ALUMN_ID AS albumId, inc.tv_vid, inc.tv_id, vts.TV_NAME AS tvName,
+    sum( inc.tv_count + inc.tv_count_app) AS realCount, sum( inc.tv_display_count + inc.tv_display_count_app) AS showCount
+FROM
+    vrs2_playlist vp, vrs2_tv_playlist vtp, vrs_tv_set vts, t_vrs_video_day_inc inc
+WHERE
+    vp.ID = vtp.TV_PLAYLIST_ID AND vtp.TV_ID = inc.tv_id AND vts.ID = vtp.TV_ID 
+AND vts.TV_ALUMN_ID = vp.id AND inc.tv_date BETWEEN ?  AND ? AND vp.IS_BD != 0 
+AND vp.TV_IS_INTREST != 1 AND vp.TV_EFFECTIVE = 1 AND vp.TV_IS_TEST = 0 AND vts.IS_BD != 0
+AND ( vts.TV_S_TYPE &lt; 2 OR vts.TV_S_TYPE IS NULL)
+AND vp.TV_CATEGORY_ID = ?  GROUP BY inc.tv_vid ORDER BY showCount DESC LIMIT 100
 </code></pre>
 
-<h4>1.3 安装python和pygments</h4>
+<blockquote><p>如果是日榜，查询时间大约在8s左右，还可以接受。如果是周榜，大概需要1min，如果是月榜，耗时约2~3分钟。周榜和月榜的时间是令人难以接受的。</p></blockquote>
 
-<p>python2.7: <a href="http://www.python.org/ftp/python/2.7.6/python-2.7.6.msi">http://www.python.org/ftp/python/2.7.6/python-2.7.6.msi</a></p>
+<h3>2. 优化方案</h3>
 
-<p>pygments的安装：
-先下载ez_setup.py脚本：<a href="https://pypi.python.org/pypi/setuptools#windows%EF%BC%8C%E7%84%B6%E5%90%8E%E6%89%A7%E8%A1%8C%EF%BC%9A">https://pypi.python.org/pypi/setuptools#windows%EF%BC%8C%E7%84%B6%E5%90%8E%E6%89%A7%E8%A1%8C%EF%BC%9A</a></p>
+<p>我采取的方案是：在日增数据的基础上，进行一周和一月的数据的汇总，生成周增表和月增表，周榜和月榜直接从周增表和月增表里查询。</p>
 
-<pre><code>$ python ez_setup.py
+<h4>2.1 通过insert into select汇总数据</h4>
+
+<p>创建表结构之后（周增表和月增表的表结构和日增表一致），通过insert into TABLE select 语句可以将查询的结果写入指定的表中，完整的SQL语句为：</p>
+
+<pre><code>INSERT INTO t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,tv_count_app,tv_display_count_app,tv_date) SELECT 
+tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) as tv_count_app, 
+sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AS tv_date 
+FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) AND 
+SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid
 </code></pre>
 
-<p>会下载setuptools-2.2.tar.gz，解压并进入：</p>
+<p>但是，如果数据量稍大，这个操作会失败，MySql提示binlog太小了。binlog用来记录数据库发生变化的“事件&#8221;，如创建表或修改表中的数据，我们的INSERT INTO语句就会使用binlog，但是select语句和show语句因为仅仅是查询，不会使用binlog。所以得想别的办法。</p>
 
-<pre><code>$ cd dist\setuptools-2.2
-$ python easy_install.py pygments
+<h4>2.2 通过load data从文件导数据</h4>
+
+<p>因为select语句不会受binlog的限制，也就是说，数据是可以查出来的，只是没法一下子写入表中。我们可以先将查出来的数据写入文件，然后通过MySql的load data local infile命令从文件中将数据导入表中。
+查询数据存入文件：</p>
+
+<pre><code>selectSql="SELECT tv_id, tv_vid, sum(tv_count) as tv_count, sum(tv_display_count) as tv_display_count, sum(tv_count_app) 
+as tv_count_app, sum(tv_display_count_app) as tv_display_count_app, SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AS tv_date FROM t_vrs_video_day_inc inc WHERE inc.tv_date BETWEEN SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+7 DAY) 
+AND SUBDATE(CURDATE(),INTERVAL WEEKDAY(CURDATE())+1 DAY) GROUP BY inc.tv_vid"
+
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$selectSql" &gt; $dataFilePath
 </code></pre>
 
-<h4>1.4 安装Octopress</h4>
+<p>从文件将数据load进表中：</p>
 
-<p>默认是官方的源，在国内比较慢，建议换成国内淘宝的ruby源：</p>
+<pre><code>loadDataSql="load data local infile '$dataFilePath' into table t_vrs_video_week_inc (tv_id,tv_vid,tv_count,tv_display_count,
+tv_count_app,tv_display_count_app,tv_date)"
 
-<pre><code>$ gem sources -a http://ruby.taobao.org
-$ gem sources -r http://rubygems.org
-$ gem sources -l
+mysql -h10.11.12.13 -uuser -ppasswd -Dvideo -s --skip-column-names -e "$loadDataSql"
 </code></pre>
 
-<p>安装Octopress到指定的目录：</p>
+<h3>3. 总结</h3>
 
-<pre><code>git clone git://github.com/imathis/octopress.git /d/yousharp
-</code></pre>
+<p>优化之后，周榜和月榜的耗时大概在10s左右，与日榜差不多。整个系统的执行时间从30min左右降到10分钟左右，应该说效果还是比较明显的。
+我的方案只是一种形式的优化，肯定不是最优的，比如多表联查的效率很低，这应该也是个优化点，还会继续探索。</p>
 
-<p>打开安装目录/d/yousharp的Gemfile文件，将第一行的source改为淘宝的源：</p>
-
-<pre><code>source "http://ruby.taobao.org"
-</code></pre>
-
-<h4>1.5 安装bundler</h4>
-
-<pre><code>$ gem install bundler
-$ bundle install
-</code></pre>
-
-<h4>1.5 安装主题，生成博客并预览</h4>
-
-<p>Octopress的<a href="http://opthemes.com/">主题列表</a>，我使用的是：<a href="https://github.com/bkutil/bootstrap-theme">Bootstrap theme</a>：</p>
-
-<pre><code>$ git clone git://github.com/bkutil/bootstrap-theme.git bootstrap-theme
-$ cp -R bootstrap-theme $MY_OCTOBLOG/.themes/bootstrap
-$ rake install['bootstrap']
-$ rake generate
-$ rake preview
-</code></pre>
-
-<blockquote><p>访问<a href="http://localhost:4000">http://localhost:4000</a>即可预览。</p></blockquote>
-
-<h4>1.6 修改环境变量支持中文</h4>
-
-<p>新建环境变量：LANG 和 LC_ALL，值均为zh_CN.UTF_8</p>
-
-<h3>2. 托管到github pages</h3>
-
-<h4>2.1 新建github repo</h4>
-
-<p>在<a href="http://github.com">github</a>新建一个repo，命名为USERNAME.github.io，使用你github的用户名取代USERNAME，如：nkcoder.github.io。</p>
-
-<h4>2.2 github配置</h4>
-
-<pre><code>$ git config --global user.name "nkcoder"
-$ git config --global user.email "daniel5hbs@gmail.com"
-$ git config --global credential.helper cache
-$ git config --global credential.helper 'cache --timeout=3600'
-</code></pre>
-
-<blockquote><p>注意：credential helper 只对https有效，对ssh无效。</p></blockquote>
-
-<p>生成rsa key，并添加到github的SSH keys中：</p>
-
-<pre><code>$ ssh-keygen -t rsa -C "daniel5hbs"
-$ ssh -T git@github.com
-</code></pre>
-
-<h4>2.3 博客发布</h4>
-
-<pre><code>$ rake setup_github_pages
-$ rake generate
-$ rake deploy
-访问nkcoder.github.io。
-</code></pre>
-
-<h3>3. 新建博客或页面</h3>
-
-<pre><code>$ rake new_post['first-blog']
-$ rake new_page['about']
-$ rake generate
-$ rake preview 
-</code></pre>
-
-<blockquote><p>说明：使用<code>$ rake preview</code>可以监视文件的变动，可以实时预览修改，但是如果修改了_config.yml或者该配置文件引用的文件发生了变化，则需要重新<code>$ rake generate</code>。</p></blockquote>
-
-<h3>4. 主题优化</h3>
-
-<h4>4.1 添加disqus评论</h4>
-
-<p>先去<a href="http://disqus.com/">disqus</a>注册一个帐号，然后修改根目录/d/yousharp下的_config.yml文件，修改为：</p>
-
-<pre><code># Disqus Comments
-disqus_short_name: nkcoder
-disqus_show_comment_count: yes 
-</code></pre>
-
-<blockquote><p>注意：将nkcoder替换为你的disqus帐号。</p></blockquote>
-
-<h4>4.2 代码高亮</h4>
-
-<p>首先下载安装python 2.x版本，然后修改_config.yml，修改为：</p>
-
-<pre><code>pygments: true
-</code></pre>
-
-<blockquote><p>注意冒号后有个空格。</p></blockquote>
-
-<p>在需要高亮的代码块使用语法：</p>
-
-<div class="highlight"><pre><code class="java"> <span class="n">your</span> <span class="n">code</span>
-    
-</code></pre></div>
-
-
-<p>或者使用三个反引号（左Alt键右边的键)：</p>
-
-<pre><code>```java
-your code
-```
-</code></pre>
-
-<h4>4.3. 在页面右侧添加分类等模块</h4>
-
-<p>系统自带的模块放在了目录：source/<em>include/asides下，我们自定义的模块放在目录：source/</em>include/custom/asides下。
-模块一：分类及标签
-使用插件<a href="https://github.com/ctdk/octopress-category-list">octopress-category-list</a>
-下载下来后，将category_list.rb放在plugins目录下，将category_list.html和category_cloud.html放在source/_include/custom/asides目录下；</p>
-
-<p>模块二：最新博文
-这是系统默认的模块，在source/_include/asides目录下的recent_posts.html，样式可以自己修改；</p>
-
-<p>模块三：博客链接
-在source/_include/custom/asides目录下新建blogroll.html，比如内容可以为：</p>
-
-<pre><code>&lt;section&gt;
-    &lt;h4&gt; Blogroll &lt;/h4&gt;
-    &lt;ul&gt;
-        &lt;li&gt;&lt;a href="http://ifeve.com/" target="_blank"&gt;并发编程网&lt;/a&gt;&lt;/li&gt;
-        &lt;li&gt;&lt;a href="http://tengine.taobao.org/book/index.html#" target="_blank"&gt;Nginx开发从入门到精通&lt;/a&gt;&lt;/li&gt;
-        &lt;li&gt;&lt;a href="http://timyang.net/" target="_blank"&gt;Tim Yang&lt;/a&gt;&lt;/li&gt;
-    &lt;/ul&gt;
-&lt;/section&gt;
-</code></pre>
-
-<p>模块四：豆瓣阅读列表
-新建douban.html，进入<a href="http://www.douban.com/service/badgemakerjs">豆瓣收藏秀</a>生成js代码，将内容写入douban.html中，如：</p>
-
-<pre><code>&lt;section&gt;
-    &lt;h4&gt; Want To Read&lt;/h4&gt;
-    &lt;div&gt;
-    &lt;script type="text/javascript" src="http://www.douban.com/service/badge/daniel5hbs/?selection=random&amp;amp;picsize=small&amp;amp;hideself=on&amp;amp;show=wishlist&amp;amp;n=9&amp;amp;cat=book&amp;amp;columns=3"&gt;&lt;/script&gt;
-    &lt;/div&gt;
-&lt;/section&gt;
-</code></pre>
-
-<p>模块五：disqus最新评论
-新建模块文件：recent_comments.html，写入disqus的js代码，如：</p>
-
-<pre><code>&lt;section&gt;
-    &lt;h4&gt; Recent Comments &lt;/h4&gt;
-    &lt;div id="dsq-recentcomments" class="dsq-widget"&gt;&lt;script type="text/javascript" src="http://disqus.com/forums/nkcoder/recent_comments_widget.js?hide_avatars=0"&gt;&lt;/script&gt;&lt;/div&gt;
-&lt;/section&gt;
-</code></pre>
-
-<p>然后修改_config.yml文件，将需要在侧边显示的模块包含在default_asides里，如：</p>
-
-<pre><code>default_asides: [custom/asides/category_list.html, asides/recent_posts.html, custom/asides/blogroll.html, custom/asides/douban.html, custom/asides/recent-comment.html]
-</code></pre>
-
-<blockquote><p>根据包含的顺序，自上向下地展示。</p></blockquote>
-
-<h4>4.4 显示摘要</h4>
-
-<p>在文章中的某一行添加如下代码即可：</p>
-
-<pre><code>&lt;!--more--&gt;
-</code></pre>
-
-<p>页面显示“Read on->&ldquo;， 剩下的内容会隐藏。</p>
-
-<h3>5. 不同环境下博客的同步</h3>
-
-<p>如果电脑中的文件丢失了，或者换电脑了，或者需要在另一个环境下写博客，则需要将博客拷贝到本地，并配置环境。</p>
-
-<h4>5.1 分支的概念</h4>
-
-<p>Octopress默认有两个分支，一个是source，包含生成博客的所有文件，另一个是master，即博客本身。
-当我们本地配置完后，master分支在目录_deploy中，因为以下划线开头，当我们向source分支提交时$ git push -u origin source时，master分支被忽略，而当我们使用rake部署时$ rake deploy，master分支则更新。</p>
-
-<h4>5.2 将博客拷贝到本地的步骤</h4>
-
-<p>如果当前没有python和ruby的环境，则需要执行本博客1.1到1.3中的步骤，配置环境；</p>
-
-<p>首先将source分支拷贝到本地的博客目录：</p>
-
-<pre><code>$ git clone -b source git@github.com:nkcoder/nkcoder.github.io.git yousharp
-</code></pre>
-
-<blockquote><p>将其中的nkcoder替换为你自己的用户名，将yousharp替换为你的博客目录。</p></blockquote>
-
-<p>然后，将master分支拷贝到_deploy目录：</p>
-
-<pre><code>$ cd mybolg
-$ git clone git@github.com:nkcoder/nkcoder.github.io.git _deploy
-</code></pre>
-
-<p>最后，安装与配置：(注意：将source修改为国内淘宝的)</p>
-
-<pre><code>$ gem install bundler
-$ bundle install
-$ rake setup_github_pages
-</code></pre>
-
-<p>可能需要输入github repo的地址，</p>
-
-<pre><code>Enter the read/write url for your repository
-(For example, 'git@github.com:nkcoder/nkcoder.github.io.git)
-</code></pre>
-
-<h4>5.3 不同环境的同步</h4>
-
-<p>在切换环境之前，确保对所做的修改都提交了：</p>
-
-<pre><code>$ ranke generate
-$ git add .
-$ git commit -am 'your comment'
-$ git push origin source
-$ rake deploy 
-
-切换环境之后，将所有的更新拷贝下来：
-
-$ cd myblog
-$ git pull origin source
-$ cd ./_deploy
-$ git pull origin master
-</code></pre>
-
-<h4>参考博文：（非常感谢）</h4>
+<h4>参考</h4>
 
 <ul>
-<li><a href="http://blog.zerosharp.com/clone-your-octopress-to-blog-from-two-places/">Clone Your Octopress to Blog From Two Places</a></li>
-<li><a href="http://arshad.github.io/blog/2012/05/04/recent-comments-in-octopress/">Recent Comments in Octopress</a></li>
-<li><a href="http://corey600.github.io/blog/2013/02/28/use-github-and-octopress-create-blog/">用Github和Octopress搭建博客</a></li>
-<li><a href="http://www.yanjiuyanjiu.com/blog/20130401/">使用github + Octopress 搭建免费博客</a></li>
+<li><a href="http://dev.mysql.com/doc/refman/5.7/en/binary-log.html">5.2.4. The Binary Log</a></li>
 </ul>
 
 </div>
@@ -433,11 +224,13 @@ $ git pull origin master
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (4)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (1)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (5)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140316/spring-jdbc/">Spring持久化之JDBC</a></li>
 		
 		  <li><a href="/blog/20140313/spring-aop-example/">Spring AOP之入门实例</a></li>
 		
@@ -456,8 +249,6 @@ $ git pull origin master
 		  <li><a href="/blog/20140213/memcached-install-libevent-repcached-memcached/">memcached安装: libevent-repcached-memcached</a></li>
 		
 		  <li><a href="/blog/20140119/mysql-usage-accumulation-series-one/">MySql用法日积月累系列一</a></li>
-		
-		  <li><a href="/blog/20140111/diary/">2014-01-11 日记</a></li>
 		
   	</ul>
 </section>
