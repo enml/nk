@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-18T20:52:33+08:00</updated>
+  <updated>2014-03-18T21:28:03+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -14,11 +14,11 @@
 
   
   <entry>
-    <title type="html"><![CDATA[elasticsearch查询api：term_query]]></title>
+    <title type="html"><![CDATA[elasticsearch查询api：term query]]></title>
     <link href="http://nkcoder.github.io/blog/20140318/elasticsearch-term-query/"/>
     <updated>2014-03-18T20:46:56+08:00</updated>
     <id>http://nkcoder.github.io/blog/20140318/elasticsearch-term-query</id>
-    <content type="html"><![CDATA[<h3>1. term_query查询</h3>
+    <content type="html"><![CDATA[<h3>1. term query查询</h3>
 
 <ul>
 <li>在给定的字段里查询词或者词组；</li>
