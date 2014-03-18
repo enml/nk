@@ -1,6 +1,6 @@
 ---
 layout: post
-title: elasticsearch查询api：term_query
+title: elasticsearch查询api：term query
 description: 介绍elasticsearch的查询api，本文主要是term_query
 date: 2014-03-18 20:46:56 +0800
 tag: elasticsearch, term_query
@@ -8,7 +8,7 @@ comments: true
 categories: elasticsearch
 ---
 
-### 1. term_query查询
+### 1. term query查询
 	
 + 在给定的字段里查询词或者词组；
 + 提供的查询词是不分词的(not analyzed)，即只有完全包含才算匹配；
