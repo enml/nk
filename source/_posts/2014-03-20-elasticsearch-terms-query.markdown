@@ -42,7 +42,7 @@ categories: elasticsearch
 		printResult(response);
 	}
 
-> 在Java API中，**terms query**使用**termsQuery()**函数，除了**minimumShouldMatch**属性，还有`boost`和`minimumMatch`属性。
+> 在Java API中，**terms query**使用**termsQuery()**函数，除了**minimumShouldMatch()**属性，还有**boost()**和**minimumMatch()**属性。
 
 ### 4. 看看Java源码
 
