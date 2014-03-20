@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-20T08:33:08+08:00</updated>
+  <updated>2014-03-20T08:45:17+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -57,7 +57,7 @@
 }
 </code></pre>
 
-<blockquote><p>在Java API中，<strong>terms query</strong>使用<strong>termsQuery()</strong>函数，除了<strong>minimumShouldMatch</strong>属性，还有<code>boost</code>和<code>minimumMatch</code>属性。</p></blockquote>
+<blockquote><p>在Java API中，<strong>terms query</strong>使用<strong>termsQuery()</strong>函数，除了<strong>minimumShouldMatch()</strong>属性，还有<strong>boost()</strong>和<strong>minimumMatch()</strong>属性。</p></blockquote>
 
 <h3>4. 看看Java源码</h3>
 
