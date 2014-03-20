@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-18T21:28:03+08:00</updated>
+  <updated>2014-03-20T08:33:08+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,87 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[elasticsearch查询api：terms query]]></title>
+    <link href="http://nkcoder.github.io/blog/20140320/elasticsearch-terms-query/"/>
+    <updated>2014-03-20T08:24:42+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140320/elasticsearch-terms-query</id>
+    <content type="html"><![CDATA[<h3>1. terms query查询</h3>
+
+<ul>
+<li>提供多个查询词，以数组形式出现，查询指定的字段是否包含其中一个或者多个查询词；</li>
+<li>功能与：<strong>bool query</strong>通过对多个term进行<code>should</code>操作的功能是一致的，是更简单的一种语法形式；</li>
+<li>提供的查询词也是不分词的，只有完全包含才算匹配；可以通过<code>minimum_should_match</code>属性指定最少匹配的个数；</li>
+</ul>
+
+
+<h3>2. REST API</h3>
+
+<p><strong>terms query</strong>的REST API示例如下：</p>
+
+<pre><code>{
+    "query": {
+        "terms": {
+            "tvName": ["日本", "停电"],
+            "minimum_should_match": 1
+        }
+    }
+}
+</code></pre>
+
+<blockquote><p>在REST API中，<strong>terms query</strong>使用<code>terms</code>关键字，其中<em>tvName</em>表示要查询的字段，<code>minimum_should_match</code>表示至少要匹配多少个查询词。</p></blockquote>
+
+<h3>3. Java API</h3>
+
+<p><strong>terms query</strong>的Java API示例如下：</p>
+
+<pre><code>public static void termsQuery() {
+    String[] queryWords = new String[] {"日本", "停电"};
+    QueryBuilder queryBuilder = QueryBuilders.termsQuery(ConstantUtil.FIELD_TV_NAME, queryWords)
+            .minimumShouldMatch("2");
+    SearchResponse response = searchRequestBuilder.setQuery(queryBuilder)
+            .setFrom(0).setSize(5).execute().actionGet();
+    printResult(response);
+}
+</code></pre>
+
+<blockquote><p>在Java API中，<strong>terms query</strong>使用<strong>termsQuery()</strong>函数，除了<strong>minimumShouldMatch</strong>属性，还有<code>boost</code>和<code>minimumMatch</code>属性。</p></blockquote>
+
+<h3>4. 看看Java源码</h3>
+
+<pre><code>public static TermsQueryBuilder termsQuery(String name, String... values) {
+    return new TermsQueryBuilder(name, values);
+}
+
+public static TermsQueryBuilder termsQuery(String name, Object... values) {
+    return new TermsQueryBuilder(name, values);
+}
+
+public static TermsQueryBuilder termsQuery(String name, Collection&lt;?&gt; values) {
+    return new TermsQueryBuilder(name, values);
+}
+
+public TermsQueryBuilder(String name, Collection values) {
+    this(name, values.toArray());
+}
+
+public TermsQueryBuilder(String name, Object... values) {
+    this.name = name;
+    this.values = values;
+}
+</code></pre>
+
+<blockquote><p><strong>termsQuery()</strong>函数的第二个参数是一个查询词数组，可以是基本类型的数组，可以是Object数组，也可以是一个集合类型；其实，内部都是调用<strong>TermsQueryBuilder</strong>的一个构造函数，即上述的最后一个函数，第二个参数是Object数组；</p></blockquote>
+
+<h4>参考</h4>
+
+<ul>
+<li><a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html">terms-query</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[elasticsearch查询api：term query]]></title>
