@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Spring | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/spring/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-20T08:45:17+08:00</updated>
+  <updated>2014-03-22T20:24:45+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,205 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Spring持久化之MyBatis]]></title>
+    <link href="http://nkcoder.github.io/blog/20140322/spring-mybatis/"/>
+    <updated>2014-03-22T20:12:52+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140322/spring-mybatis</id>
+    <content type="html"><![CDATA[<p>MyBatis是一个优秀的轻量级持久化框架，本文主要介绍MyBatis与Spring集成的配置与用法。</p>
+
+<h3>1. Spring MyBatis配置</h3>
+
+<h3>1.1 添加Maven依赖</h3>
+
+<p>在pom.xml文件里添加mybatis-spring和mybatis的依赖：</p>
+
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis-spring&lt;/artifactId&gt;
+    &lt;version&gt;${mybatis.spring.version}&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+    &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+    &lt;version&gt;${mybatis.version}&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
+<blockquote><p>mybatis-spring当前最新版本为1.2.2，mybatis当前版本是3.2.5.</p></blockquote>
+
+<h3>1.2 添加dao接口</h3>
+
+<p>这里的dao必须是接口，而不是具体的实现，如MyBatisDao.java内容为：</p>
+
+<pre><code>public interface MyBatisTest {
+
+    public String getUserNameById(int id);
+
+    public List&lt;Students&gt; getStudentByNumAndCity(Map&lt;String, Object&gt; queryMap);
+}
+</code></pre>
+
+<blockquote><p>接口中定义的每一个方法对应于mapper映射文件中定义的jdbc执行模块，如<code>&lt;select/&gt;</code>、<code>&lt;update/&gt;</code>、<code>&lt;insert/&gt;</code>等。</p></blockquote>
+
+<h3>1.3 添加mybatis配置文件</h3>
+
+<p>该配置文件里主要配置类型别名<code>&lt;typeAliases/&gt;</code>、设置<code>&lt;settings/&gt;</code>，mapper映射文件路径<code>&lt;mappers/&gt;</code>也可以放在这里，但更建议将所有的mapper文件都放在一个目录下，在定义<code>sqlSessionFactory</code>时通过属性<code>mapperLocations</code>指定。如mybatis.xml配置文件可以如下定义：</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd"&gt;
+
+&lt;configuration&gt;
+    &lt;typeAliases&gt;
+        &lt;typeAlias type="com.sohu.tv.bean.Students" alias="Students"/&gt;
+    &lt;/typeAliases&gt;
+
+    &lt;!--&lt;mappers&gt;--&gt;
+        &lt;!--&lt;mapper resource="com/sohu/tv/mapper/MybatisTest.xml"/&gt;--&gt;
+    &lt;!--&lt;/mappers&gt;--&gt;
+
+&lt;/configuration&gt;
+</code></pre>
+
+<blockquote><p>类型别名是用别名来代表全限定类名，如在需要用到com.sohu.tv.bean.Students的地方，都可以使用Students来代替。</p></blockquote>
+
+<h3>1.4 添加mapper映射文件：</h3>
+
+<p>mapper映射文件可以定义数据库列与POJO类属性的映射，以及与dao接口类中的方法对应的JDBC执行模块，如MyBatisMapper.xml的内容为：</p>
+
+<pre><code>&lt;mapper namespace="com.sohu.tv.dao.MyBatisTest"&gt;
+    &lt;resultMap id="studentMap" type="Students"&gt;
+        &lt;result column="name" property="name"/&gt;
+        &lt;result column="sex" property="sex"/&gt;
+        &lt;result column="number" property="number"/&gt;
+        &lt;result column="enable" property="enable"/&gt;
+        &lt;result column="city" property="city"/&gt;
+    &lt;/resultMap&gt;
+
+    &lt;select id="getUserNameById" parameterType="int" resultType="String"&gt;
+        select name from students where id = #{id}
+    &lt;/select&gt;
+
+    &lt;select id="getStudentByNumAndCity" parameterType="map" resultMap="studentMap"&gt;
+        select * from students where number = #{num} and city = #{city}
+    &lt;/select&gt;
+
+&lt;/mapper&gt;
+</code></pre>
+
+<blockquote><p><code>&lt;resultMap/&gt;</code>即定义列与属性的字段映射；<code>&lt;select/&gt;</code>中的参数和返回值的类型，既可以为基本类型，如string，int，long，也可以是map，返回类型还可以是<code>&lt;resultMap/&gt;</code>定义的映射map；如果参数类型是map，则sql中的参数名（如#{num})必须是map的key；如果返回类型为map，则sql语句中返回的列名为key；如果是基本类型，使用type，如parameterType，resultType，如果是自定义map，使用parameterMap，resultMap.</p></blockquote>
+
+<h3>1.5 Spring配置文件的配置</h3>
+
+<p>首先需要配置sqlSessionFactory：</p>
+
+<pre><code>&lt;bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"&gt;
+    &lt;property name="dataSource" ref="feedbackDataSource"/&gt;
+    &lt;property name="configLocation" value="classpath:mybatis.xml"/&gt;
+    &lt;property name="mapperLocations" value="classpath:com/sohu/tv/mapper/*.xml"/&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<blockquote><p>属性<code>dataSource</code>引用JDBC数据源；属性<code>configLocation</code>指定mybatis配置文件的位置，配置文件中定义别名<code>&lt;typeAliases/&gt;</code>，设置<code>&lt;settings/&gt;</code>等。<code>mapperLocations</code>指定mapper映射文件的路径。有一点需要注意的是，要确保mapper映射文件被打包进classpath中，默认情况下，maven会忽略源文件中的资源文件，可以通过在pom文件中配置，使得资源文件被一起打包进classpath中；如在pom配置文件中添加：</p></blockquote>
+
+<pre><code>&lt;build&gt;
+    &lt;resources&gt;
+        &lt;resource&gt;
+            &lt;directory&gt;src/main/java&lt;/directory&gt;
+            &lt;excludes&gt;&lt;exclude&gt;**/*.java&lt;/exclude&gt;&lt;/excludes&gt;
+        &lt;/resource&gt;
+        &lt;resource&gt;
+            &lt;directory&gt;src/main/resources&lt;/directory&gt;
+            &lt;filtering&gt;true&lt;/filtering&gt;
+        &lt;/resource&gt;
+    &lt;/resources&gt;
+&lt;/build&gt;
+</code></pre>
+
+<p>其次，需要定义与dao接口相关联的mapperFactoryBean：</p>
+
+<pre><code>&lt;bean id="mybatisDaoImpl" class="org.mybatis.spring.mapper.MapperFactoryBean"&gt;
+    &lt;property name="mapperInterface" value="com.sohu.tv.dao.MyBatisTest"/&gt;
+    &lt;property name="sqlSessionFactory" ref="sqlSessionFactory"/&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<blockquote><p><code>mapperInterface</code>属性的值为相关的dao接口，<code>sqlSessionFactory</code>属性引用了上述定义的sqlSessionFacotry；</p></blockquote>
+
+<h3>1.6 service类中调用dao类实现业务逻辑</h3>
+
+<p>在MyBatisServiceImpl.java中使用dao接口中提供的方法：</p>
+
+<pre><code>@Resource(name = "mybatisDaoImpl")
+MyBatisDao myBatisDaoImpl;
+
+String userName = mybatisDaoImpl.getUserNameById(2);
+System.out.println(userName);
+
+Map&lt;String, Object&gt; queryMap = new HashMap&lt;String, Object&gt;();
+queryMap.put("num", 333);
+queryMap.put("city", "beijing");
+List&lt;Students&gt; studentsList = mybatisDaoImpl.getStudentByNumAndCity(queryMap);
+for (Students students: studentsList) {
+    System.out.println(students.getName());
+}
+</code></pre>
+
+<h3>2. 启动自动扫描注解</h3>
+
+<p>我们可以在applicationContext.xml配置文件里为每个dao接口定义bean，但mybatis还提供了一种更简便的自动扫描注解的机制，即<code>&lt;mybatis:scan/&gt;</code>和<code>&lt;MapperScannerConfigurer/&gt;</code>。
+配置<code>&lt;mybatis:scan/&gt;</code>，需要在applicationContext.xml配置文件里添加：</p>
+
+<pre><code>&lt;mybatis:scan base-package="com.sohu.tv.dao"/&gt;
+</code></pre>
+
+<blockquote><p><code>&lt;mybatis:scan/&gt;</code>与Spring的<code>&lt;context:component-scan/&gt;</code>非常相似，<code>base-package</code>指定要扫描的包，并将包下的所有接口注册为对应的bean。命名规则：和Spring一样，如果该接口没有被注解，则bean的名称为首字母小写的非限定类名，如接口为<code>com.sohu.tv.dao.MyBatisDao</code>，则bean的名字为<code>myBatisDao</code>；如果dao接口使用了Spring的注解，如@Component或@Named等注解，并提供了bean的名称，则mybatis使用该注解的名称作为bean的名称。如将MyBatisDao接口重定义如下：</p></blockquote>
+
+<pre><code>@Repository(value = "mybatisDao")
+public interface MyBatisDao {
+
+    public String getUserNameById(int id);
+
+    public List&lt;Students&gt; getStudentByNumAndCity(Map&lt;String, Object&gt; queryMap);
+}
+</code></pre>
+
+<blockquote><p>测试MyBatisDao被自动注解后的bean的名称为mybatisDao。建议通过注解指定bean的名称，防止类类名的变化导致了bean名称的变化；</p></blockquote>
+
+<p>配置<code>&lt;MapperScannerConfigurer/&gt;</code>，需要在applicationContext.xml中添加：</p>
+
+<pre><code>&lt;bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"&gt;
+    &lt;property name="basePackage" value="com.sohu.tv.dao"/&gt;
+    &lt;property name="sqlSessionFactoryBeanName" value = "sqlSessionFactory"/&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<blockquote><p>这里的<code>basePackage</code>与<code>&lt;mybatis:scan/&gt;</code>的<code>base-package</code>的含义一致，bean的命名规则也是一样的，所以这两种方式等价。</p>
+
+<p>如果启动了自动扫描注解，则在spring配置文件中不再需要dao接口的bean定义了。</p></blockquote>
+
+<h3>3. 总结-最佳实践</h3>
+
+<ul>
+<li>mapper映射文件放在单独的目录中，统一管理，在配置<code>sqlSessionFactory</code>时，通过属性<code>mapperLocations</code>指定；</li>
+<li>mybatis配置文件中只定义<code>typeAliases</code>、<code>settings</code>等配置信息；</li>
+<li>Spring配置文件中，通过<code>&lt;mybatis:scan/&gt;</code>或者<code>&lt;MapperScannerConfigurer/&gt;</code>启动自动注解，并通过Spring的注解对bean命名。</li>
+</ul>
+
+
+<h4>参考资料：</h4>
+
+<ul>
+<li><ol>
+<li><a href="http://mybatis.github.io/spring/index.html">MyBatis-Spring</a></li>
+</ol>
+</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Spring持久化之JDBC]]></title>
@@ -491,197 +690,6 @@ public class VideoService {
 </code></pre>
 
 <blockquote><p><code>context:include-filter</code>表示需要扫描并注解的类，<code>context:exclude-filter</code>表示扫描时需要排除的包；<code>type</code>一种有5中，<code>assignable</code>表示继承自<code>expression</code>所指定的包，<code>annotation</code>表示所有expression所指定的注解。</p></blockquote>
-
-<h4>参考资料</h4>
-
-<ul>
-<li><a href="http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&amp;qid=1394943496&amp;sr=8-1&amp;keywords=spring+in+action">Spring实战(第3版)</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Spring依赖注入之XML配置]]></title>
-    <link href="http://nkcoder.github.io/blog/20140308/spring-di-xml/"/>
-    <updated>2014-03-08T21:36:47+08:00</updated>
-    <id>http://nkcoder.github.io/blog/20140308/spring-di-xml</id>
-    <content type="html"><![CDATA[<blockquote><p>因为项目中一直要用到Spring相关的知识，所以最近在看<a href="http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&amp;qid=1394286577&amp;sr=8-1&amp;keywords=spring%E5%AE%9E%E6%88%98">Spring实战</a>这本书，希望对Spring有一个整理的了解和把握。不得不说，这是一本好书，中文译本也不错。这个系列，记录自己关于Spring的笔记和理解，一是加深理解，同时也希望对别人有所帮助。</p></blockquote>
-
-<h3>1. 通过构造方法和xml配置注入</h3>
-
-<blockquote><p>定义带参数的构造函数，使依赖对象作为构造函数的参数：</p></blockquote>
-
-<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
-    VideoInfoDao videoInfoDao;
-
-    public VideoInfoServiceImpl() {}
-
-    public VideoInfoServiceImpl(VideoInfoDao videoInfoDao) {
-        this.videoInfoDao = videoInfoDao;
-    }
-
-    @Override
-    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
-        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
-        return videoList;
-    }
-}
-</code></pre>
-
-<blockquote><p>在定义bean时，使用<code>constructor-arg</code>标签，name表示构造函数的参数，ref表示引用另一个bean；参数也可以为基本类型，此时使用value标签，而不是ref。(如果不使用<code>constructor-arg</code>，则bean实例化时调用的是默认的不带参数的构造函数)</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;constructor-arg name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
-&lt;/bean&gt;
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;constructor-arg name="id" value="25"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>2. 通过setter方法和xml配置注入</h3>
-
-<blockquote><p>定义依赖对象的setter方法，在bean定义时，使用<code>property</code>标签表示调用指定属性的setter方法，实现注入：</p></blockquote>
-
-<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
-    VideoInfoDao videoInfoDao;
-
-    @Override
-    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
-        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
-        return videoList;
-    }
-
-    public void setVideoInfoDao(VideoInfoDao videoInfoDao) {
-        this.videoInfoDao = videoInfoDao;
-    }
-}
-</code></pre>
-
-<blockquote><p>property指定属性为videoInfoDao，则bean实例化后调用setVideoInfoDao方法实现注入；ref表示引用另一个bean，value表示基本类型值，int, float, true等。</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<blockquote><p>此时也可以通过<code>bean</code>的p属性实现注入，比较简洁，需要加入p命令空间，和<code>property</code>方式是等价的。</p></blockquote>
-
-<pre><code>xmlns:p="http://www.springframework.org/schema/p"
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
-        p:videoInfoDao-ref="videoInfoDaoImpl" /&gt;
-</code></pre>
-
-<h3>3. 通过SpEL表达式注入</h3>
-
-<blockquote><p>SpEL可以实现在运行时装配。SpEL通过#{}获取变量的值，{}中既可以是值类型，也可以是引用类型，通过bean的id引用其它的bean，此时，在SpEL中通过value引用其它的bean和通过ref直接引用bean的效果是相同的。</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;!--&lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;--&gt;
-    &lt;property name="videoInfoDao" value="#{videoInfoDaoImpl}" /&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>4. 通过setter方法和autowire=&ldquo;byName"自动装配注入</h3>
-
-<blockquote><p>根据bean的名字进行注入，使用autowire=&ldquo;byName"，则寻找与属性名字相同的bean，通过属性的setter方法注入。</p></blockquote>
-
-<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
-&lt;bean id="videoService" class="org.service.VideoService" autowire="byName"/&gt;
-</code></pre>
-
-<h3>5. 通过setter方法和autowire=&ldquo;byType"自动装配注入</h3>
-
-<blockquote><p>根据bean的类型进行注入，使用autowire=&ldquo;byType"，则寻找与属性名字相同的bean，通过属性的setter方法注入：</p></blockquote>
-
-<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
-&lt;bean id="videoService" class="org.service.VideoService" autowire="byType"/&gt;
-</code></pre>
-
-<h3>6. 通过factory-method给单例类定义bean</h3>
-
-<blockquote><p>如果类的构造函数不可用，比如单例类，构造函数私有，通过public的接口获取实例；定义单例类的bean时，使用<code>factory-method</code>，表示调用类的静态方法构造实例：</p></blockquote>
-
-<pre><code>&lt;bean id="singleton" class="yousharp.Singleton" factory-method="getInstance"/&gt;
-&lt;bean id="factoryService" class="yousharp.FactoryService"&gt;
-    &lt;constructor-arg name="singleton" ref="singleton"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>7. 定义bean的作用域</h3>
-
-<blockquote><p>默认是singleton，可以设置scope属性为prototype，表示每次调用都创建一个新实例：</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
-    scope="prototype"/&gt;
-</code></pre>
-
-<h3>8. 装配list</h3>
-
-<blockquote><p>数组或Collection的任意实现如List, ArrayList等都可以使用list和set来装配，区别在于set中不允许有重复元素。定义list成员的setter方法：</p></blockquote>
-
-<pre><code>private List&lt;VideoInfoDao&gt; videoInfoDaoList;
-
-public void setVideoInfoDaoList(List&lt;VideoInfoDao&gt; videoInfoDaoList) {
-    this.videoInfoDaoList = videoInfoDaoList;
-}
-</code></pre>
-
-<blockquote><p>在xml配置文件里，在<code>property</code>里定义<code>list</code>，给list成员注入实例：</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDaoList"&gt;
-        &lt;list&gt;
-            &lt;ref bean="jdbcDaoImple"/&gt;
-            &lt;ref bean="mybatisDaoImpl"/&gt;
-            &lt;ref bean="hibernateDaoImpl"/&gt;
-        &lt;/list&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>9. 装配map</h3>
-
-<blockquote><p>如果需要对一个map成员变量进行注入，在<code>property</code>里，通过<code>map</code>来实现注入，其中key和value都可以是值类型或引用类型；</p></blockquote>
-
-<pre><code>private Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap ;
-
-public void setVideoInfoDaoList(Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap) {
-    this.videoInfoDaoMap = videoInfoDaoMap;
-}
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDaoList"&gt;
-        &lt;map&gt;
-            &lt;entry key="jdbc" value-ref="videoInfoDaoImpl"/&gt;
-            &lt;entry key="mybatis" value-ref="videoInfoDaoImpl"/&gt;
-            &lt;entry key="hibernate" value-ref="videoInfoDaoImpl"/&gt;
-        &lt;/map&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>10. 装配property</h3>
-
-<blockquote><p>property也是key-value对，与map的区别是，其key和value必须都是String类型。</p></blockquote>
-
-<pre><code>Properties props;
-public void setProps(Properties props) {
-    this.props = props;
-}
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl" &gt;
-    &lt;property name="props"&gt;
-        &lt;props&gt;
-            &lt;prop key="daily"&gt;30 00 * * *&lt;/prop&gt;
-            &lt;prop key="weekly"&gt;30 00 * * 1&lt;/prop&gt;
-            &lt;prop key="monthly"&gt;30 00 * 1 *&lt;/prop&gt;
-        &lt;/props&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
-</code></pre>
 
 <h4>参考资料</h4>
 

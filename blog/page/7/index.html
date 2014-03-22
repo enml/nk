@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140309/spring-di-annotation/">Spring依赖注入之注解注入</a></h1>
     
     
       <p class="meta">
@@ -126,191 +126,99 @@
   
 
 
-<time datetime="2014-03-08T21:36:47+08:00" pubdate data-updated="true">Mar 8<span>th</span>, 2014</time>
+<time datetime="2014-03-09T18:19:11+08:00" pubdate data-updated="true">Mar 9<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140308/spring-di-xml/#disqus_thread">Comments</a>
+         | <a href="/blog/20140309/spring-di-annotation/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><blockquote><p>因为项目中一直要用到Spring相关的知识，所以最近在看<a href="http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&amp;qid=1394286577&amp;sr=8-1&amp;keywords=spring%E5%AE%9E%E6%88%98">Spring实战</a>这本书，希望对Spring有一个整理的了解和把握。不得不说，这是一本好书，中文译本也不错。这个系列，记录自己关于Spring的笔记和理解，一是加深理解，同时也希望对别人有所帮助。</p></blockquote>
+  <div class="entry-content"><h3>1. bean的自动装配和自动检测的区别</h3>
 
-<h3>1. 通过构造方法和xml配置注入</h3>
+<p>启用注解装配，在xml配置文件里添加：</p>
 
-<blockquote><p>定义带参数的构造函数，使依赖对象作为构造函数的参数：</p></blockquote>
-
-<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
-    VideoInfoDao videoInfoDao;
-
-    public VideoInfoServiceImpl() {}
-
-    public VideoInfoServiceImpl(VideoInfoDao videoInfoDao) {
-        this.videoInfoDao = videoInfoDao;
-    }
-
-    @Override
-    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
-        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
-        return videoList;
-    }
-}
+<pre><code>&lt;context:annotation-config/&gt;
 </code></pre>
 
-<blockquote><p>在定义bean时，使用<code>constructor-arg</code>标签，name表示构造函数的参数，ref表示引用另一个bean；参数也可以为基本类型，此时使用value标签，而不是ref。(如果不使用<code>constructor-arg</code>，则bean实例化时调用的是默认的不带参数的构造函数)</p></blockquote>
+<p>启用自动扫描注解，在xml配置文件里添加：</p>
 
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;constructor-arg name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
-&lt;/bean&gt;
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;constructor-arg name="id" value="25"/&gt;
-&lt;/bean&gt;
+<pre><code>&lt;context:component-scan base-package="org.yousharp.base"/&gt;
 </code></pre>
 
-<h3>2. 通过setter方法和xml配置注入</h3>
+<blockquote><p>二者的区别：
+自动装配表示通过@Autowired, @Inject, @Resource等实现对属性或构造函数的自动注入；仍然需要在配置文件里定义bean，只是通过自动装配省去了<code>property</code>和<code>constructor-arg</code>的配置。
+自动检测是扫描特定的注解（包括：@Component, @Controller, @Service, @Repository)，将注解过的类自动定义为bean，自动检测是自动装配的超集，通过自动检测，可以省去在xml配置文件里定义<code>bean</code>了。</p></blockquote>
 
-<blockquote><p>定义依赖对象的setter方法，在bean定义时，使用<code>property</code>标签表示调用指定属性的setter方法，实现注入：</p></blockquote>
+<h3>2. 通过自动装配和注解实现注入</h3>
 
-<pre><code>public class VideoInfoServiceImpl implements VideoInfoService {
-    VideoInfoDao videoInfoDao;
+<p>在xml配置文件里启动注解装配：</p>
 
-    @Override
-    public List&lt;Map&lt;String, Object&gt;&gt; getVideos(Map&lt;String, Object&gt; queryMap) {
-        List&lt;Map&lt;String, Object&gt;&gt; videoList = videoInfoDao.getVideos(queryMap);
-        return videoList;
-    }
-
-    public void setVideoInfoDao(VideoInfoDao videoInfoDao) {
-        this.videoInfoDao = videoInfoDao;
-    }
-}
+<pre><code>&lt;context:annotation-config/&gt;
 </code></pre>
 
-<blockquote><p>property指定属性为videoInfoDao，则bean实例化后调用setVideoInfoDao方法实现注入；ref表示引用另一个bean，value表示基本类型值，int, float, true等。</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<blockquote><p>此时也可以通过<code>bean</code>的p属性实现注入，比较简洁，需要加入p命令空间，和<code>property</code>方式是等价的。</p></blockquote>
-
-<pre><code>xmlns:p="http://www.springframework.org/schema/p"
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
-        p:videoInfoDao-ref="videoInfoDaoImpl" /&gt;
-</code></pre>
-
-<h3>3. 通过SpEL表达式注入</h3>
-
-<blockquote><p>SpEL可以实现在运行时装配。SpEL通过#{}获取变量的值，{}中既可以是值类型，也可以是引用类型，通过bean的id引用其它的bean，此时，在SpEL中通过value引用其它的bean和通过ref直接引用bean的效果是相同的。</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;!--&lt;property name="videoInfoDao" ref="videoInfoDaoImpl"/&gt;--&gt;
-    &lt;property name="videoInfoDao" value="#{videoInfoDaoImpl}" /&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>4. 通过setter方法和autowire=&ldquo;byName&#8221;自动装配注入</h3>
-
-<blockquote><p>根据bean的名字进行注入，使用autowire=&ldquo;byName&#8221;，则寻找与属性名字相同的bean，通过属性的setter方法注入。</p></blockquote>
+<p>定义bean：</p>
 
 <pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
-&lt;bean id="videoService" class="org.service.VideoService" autowire="byName"/&gt;
 </code></pre>
 
-<h3>5. 通过setter方法和autowire=&ldquo;byType&#8221;自动装配注入</h3>
+<p>然后在需要注入的属性上或者其setter方法上，或者构造函数上，添加@Autowired, @Inject, @Resource等注解实现自动注入：</p>
 
-<blockquote><p>根据bean的类型进行注入，使用autowire=&ldquo;byType&#8221;，则寻找与属性名字相同的bean，通过属性的setter方法注入：</p></blockquote>
-
-<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
-&lt;bean id="videoService" class="org.service.VideoService" autowire="byType"/&gt;
-</code></pre>
-
-<h3>6. 通过factory-method给单例类定义bean</h3>
-
-<blockquote><p>如果类的构造函数不可用，比如单例类，构造函数私有，通过public的接口获取实例；定义单例类的bean时，使用<code>factory-method</code>，表示调用类的静态方法构造实例：</p></blockquote>
-
-<pre><code>&lt;bean id="singleton" class="yousharp.Singleton" factory-method="getInstance"/&gt;
-&lt;bean id="factoryService" class="yousharp.FactoryService"&gt;
-    &lt;constructor-arg name="singleton" ref="singleton"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<h3>7. 定义bean的作用域</h3>
-
-<blockquote><p>默认是singleton，可以设置scope属性为prototype，表示每次调用都创建一个新实例：</p></blockquote>
-
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"
-    scope="prototype"/&gt;
-</code></pre>
-
-<h3>8. 装配list</h3>
-
-<blockquote><p>数组或Collection的任意实现如List, ArrayList等都可以使用list和set来装配，区别在于set中不允许有重复元素。定义list成员的setter方法：</p></blockquote>
-
-<pre><code>private List&lt;VideoInfoDao&gt; videoInfoDaoList;
-
-public void setVideoInfoDaoList(List&lt;VideoInfoDao&gt; videoInfoDaoList) {
-    this.videoInfoDaoList = videoInfoDaoList;
+<pre><code>//@Autowired
+//@Inject
+@Resource
+public void setSaveVideoInfoDao(SaveVideoInfoDao videoInfoDao) {
+    this.saveVideoInfoDao = videoInfoDao;
 }
 </code></pre>
 
-<blockquote><p>在xml配置文件里，在<code>property</code>里定义<code>list</code>，给list成员注入实例：</p></blockquote>
+<blockquote><p>@Autowired, @Inject, @Resource的区别：@Autowired是Spring 3.0的注解，是通过byType形式实现注解，可以通过@Qualifier根据bean的id进行限定；使用@Autowired注解即引入了对Spring的依赖。@Inject是JSR 330的注解，使用该注解需要导入包javax.inject，@Named(value=&ldquo;&rdquo;)可以根据bean的id进行限定；@Resource是JSR 250的注解，可以通过value限定bean的id，如@Resource(value=&ldquo;&rdquo;);</p></blockquote>
 
-<pre><code>&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDaoList"&gt;
-        &lt;list&gt;
-            &lt;ref bean="jdbcDaoImple"/&gt;
-            &lt;ref bean="mybatisDaoImpl"/&gt;
-            &lt;ref bean="hibernateDaoImpl"/&gt;
-        &lt;/list&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
+<h3>3. 使用自动检测注解实现注入</h3>
+
+<p>在xml配置文件里增加自动检测的配置：</p>
+
+<pre><code>&lt;context:component-scan base-package="org.yousharp.base"/&gt;
 </code></pre>
 
-<h3>9. 装配map</h3>
+<p>将需要被自动检测而注册为bean的类使用对应的构造型注解：</p>
 
-<blockquote><p>如果需要对一个map成员变量进行注入，在<code>property</code>里，通过<code>map</code>来实现注入，其中key和value都可以是值类型或引用类型；</p></blockquote>
+<pre><code>@Repository
+public class SaveVideoInfoDao {
 
-<pre><code>private Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap ;
-
-public void setVideoInfoDaoList(Map&lt;String, VideoInfoDaoImpl&gt; videoInfoDaoMap) {
-    this.videoInfoDaoMap = videoInfoDaoMap;
+    public void printMesg(String message) {
+        System.out.println("saving video info....");
+    }
 }
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl"&gt;
-    &lt;property name="videoInfoDaoList"&gt;
-        &lt;map&gt;
-            &lt;entry key="jdbc" value-ref="videoInfoDaoImpl"/&gt;
-            &lt;entry key="mybatis" value-ref="videoInfoDaoImpl"/&gt;
-            &lt;entry key="hibernate" value-ref="videoInfoDaoImpl"/&gt;
-        &lt;/map&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
 </code></pre>
 
-<h3>10. 装配property</h3>
+<p>使用注解对依赖的属性进行输入：</p>
 
-<blockquote><p>property也是key-value对，与map的区别是，其key和value必须都是String类型。</p></blockquote>
+<pre><code>@Service
+public class VideoService {
+    @Resource
+    SaveVideoInfoDao saveVideoInfoDao;
 
-<pre><code>Properties props;
-public void setProps(Properties props) {
-    this.props = props;
+    public void saveVideoInfo(String info) {
+        saveVideoInfoDao.printMesg(info);
+    }
 }
-
-&lt;bean id="videoInfoServiceImpl" class="com.sohu.tv.service.impl.VideoInfoServiceImpl" &gt;
-    &lt;property name="props"&gt;
-        &lt;props&gt;
-            &lt;prop key="daily"&gt;30 00 * * *&lt;/prop&gt;
-            &lt;prop key="weekly"&gt;30 00 * * 1&lt;/prop&gt;
-            &lt;prop key="monthly"&gt;30 00 * 1 *&lt;/prop&gt;
-        &lt;/props&gt;
-    &lt;/property&gt;
-&lt;/bean&gt;
 </code></pre>
+
+<blockquote><p>@Component是通用的注解，@Controller表示将该类定义为Spring MVC的控制器，@Service定义服务层，@Repository定义数据仓库；这些构造型注解默认以无限定类名作为bean的id，也可以显式指定id名称，如@Service(&ldquo;videoInfoService&rdquo;)或者@Service(name=&ldquo;videoInfoService&rdquo;);</p></blockquote>
+
+<h3>4. 自动检测注解的过滤</h3>
+
+<p>可以为扫描行为定义过滤器，如<code>context:include-filter</code>, <code>context:exclude-filter</code></p>
+
+<pre><code>&lt;context:component-scan base-package="org.yousharp"&gt;
+    &lt;context:include-filter type="assignable" expression="org.yousharp.dao.SaveVideoInfoDao"/&gt;
+    &lt;context:exclude-filter type="annotation" expression="org.springframework.stereotype.Component"/&gt;
+&lt;/context:component-scan&gt;
+</code></pre>
+
+<blockquote><p><code>context:include-filter</code>表示需要扫描并注解的类，<code>context:exclude-filter</code>表示扫描时需要排除的包；<code>type</code>一种有5中，<code>assignable</code>表示继承自<code>expression</code>所指定的包，<code>annotation</code>表示所有expression所指定的注解。</p></blockquote>
 
 <h4>参考资料</h4>
 
@@ -339,11 +247,13 @@ public void setProps(Properties props) {
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (3)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (5)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (3)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140322/spring-mybatis/">Spring持久化之MyBatis</a></li>
 		
 		  <li><a href="/blog/20140320/elasticsearch-terms-query/">elasticsearch查询api：terms query</a></li>
 		
@@ -362,8 +272,6 @@ public void setProps(Properties props) {
 		  <li><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></li>
 		
 		  <li><a href="/blog/20140216/xmemcached-usage-with-spring/">xmemcached主要用法及与Spring集成</a></li>
-		
-		  <li><a href="/blog/20140215/memcached-usage-parameters-commands/">memcached用法：参数和命令详解</a></li>
 		
   	</ul>
 </section>

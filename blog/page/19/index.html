@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>String.java 源码学习 - You Sharp</title>
+  <title>You Sharp</title>
   <meta name="author" content="lingguo">
 
   
-  <meta name="description" content="Java API String.java的主要源码的分析和学习">
+  <meta name="description" content="blog about algorithm, Java Web, Linux, Python, Open Source...">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://nkcoder.github.io/blog/20140104/java-string-source">
+  <link rel="canonical" href="http://nkcoder.github.io/blog/page/19">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -102,13 +102,15 @@
 </nav>
   <div class="container">
     <div class="row-fluid">
-      
-<article class="hentry span9" role="article">
-
+      <div class="span9">
   
+  
+  
+    <article>
+      
   <header class="page-header">
     
-      <h1 class="entry-title">String.java 源码学习</h1>
+      <h1 class="entry-title"><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></h1>
     
     
       <p class="meta">
@@ -126,14 +128,14 @@
 
 <time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
         
-         | <a href="#disqus_thread">Comments</a>
+         | <a href="/blog/20140104/java-string-source/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><h3>1. 存储结构</h3>
+  <div class="entry-content"><h3>1. 存储结构</h3>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
@@ -391,69 +393,20 @@
 
 <blockquote><p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p></blockquote>
 </div>
-
-
-  <footer>
-    <p class="meta">
-      
   
-
-<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
-
-      
-
-
-
-
-
-
-
-
   
 
 
-<time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
-      
-
-<span class="categories">
+    </article>
   
-    <a class='category' href='/blog/categories/java/'>Java</a>
-  
-</span>
-
-
-    </p>
+  <ul class="pager">
     
-      <div class="sharing">
-  
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140104/java-string-source/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140104/java-string-source/" >Tweet</a>
-  
-  
-  <div class="g-plusone" data-size="medium"></div>
-  
-  
+    <li><a href="/blog/archives">Blog Archives</a></li>
+    
+    <li class="next"><a href="/blog/page/18/">Newer &rarr;</a></li>
+    
+  </ul>
 </div>
-
-    
-    
-    <section>
-      <h1>Comments</h1>
-      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-    </section>
-    
-    <ul class="pager">
-      
-      <li><a href="/blog/archives">Blog Archives</a></li>
-      
-      <li class="next"><a class="basic-alignment right" href="/blog/20140105/bash-for-loop-by-example/"
-        title="Next Post: bash for循环用法示例">bash for循环用法示例
-        &raquo;</a></li>
-      
-    </ul>
-  </footer>
-</article>
-
 <aside class="sidebar-nav span3">
   
     <section>
@@ -494,7 +447,6 @@
   
 </aside>
 
-
     </div>
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
@@ -510,10 +462,7 @@
       var disqus_shortname = 'nkcoder';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://nkcoder.github.io/blog/20140104/java-string-source/';
-        var disqus_url = 'http://nkcoder.github.io/blog/20140104/java-string-source/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
