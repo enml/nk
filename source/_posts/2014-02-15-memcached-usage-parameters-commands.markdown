@@ -305,5 +305,4 @@ categories: memcached
 + [memcached wiki](https://code.google.com/p/memcached/wiki/NewStart)
 + [memcached命令行操作](http://www.zrwm.com/?p=642)
 + [memcached命令行参数说明](http://blog.csdn.net/wanghai__/article/details/8539435)
-+ [memcached详解](http://freeloda.blog.51cto.com/2033581/1289806）
-+ []
++ [memcached详解](http://freeloda.blog.51cto.com/2033581/1289806)
