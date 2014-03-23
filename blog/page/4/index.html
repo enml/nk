@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140316/spring-jdbc/">Spring持久化之JDBC</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140318/elasticsearch-term-query/">Elasticsearch查询api：term Query</a></h1>
     
     
       <p class="meta">
@@ -126,181 +126,96 @@
   
 
 
-<time datetime="2014-03-16T18:01:26+08:00" pubdate data-updated="true">Mar 16<span>th</span>, 2014</time>
+<time datetime="2014-03-18T20:46:56+08:00" pubdate data-updated="true">Mar 18<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140316/spring-jdbc/#disqus_thread">Comments</a>
+         | <a href="/blog/20140318/elasticsearch-term-query/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>这个小系列介绍Spring的持久化策略，主要关注当前应用最广泛的三种方式：Spring JDBC， MyBatis以及Hibernate。
-使用JDBC的优劣如下：</p>
+  <div class="entry-content"><h3>1. term query查询</h3>
 
 <ul>
-<li>优势：相对于持久化框架，使用JDBC，不需要掌握其它框架的查询语言，允许我们在更低的层次上处理数据，能够访问数据库中单独的列，而且能够更好地对数据访问的性能进行调优。</li>
-<li>劣势：随着项目的规模和复杂度的提升，使用JDBC会非常繁琐，同时不易于处理复杂的问题。</li>
-<li>Spring JDBC：提供数据访问模板，简化JDBC编程，同时提供了平台无关的持久化异常体系。</li>
+<li>在给定的字段里查询词或者词组；</li>
+<li>提供的查询词是不分词的(not analyzed)，即只有完全包含才算匹配；</li>
+<li>支持boost属性，boost可以提高field和document的相关性；</li>
 </ul>
 
 
-<h3>1. 配置数据源</h3>
+<h3>2. REST API</h3>
 
-<p>在生产环境，考虑到性能，应该使用数据库连接池。以commons dbcp配置为例，配置如下：</p>
-
-<pre><code>&lt;context:property-placeholder location="classpath:jdbc.properties"/&gt;
-
-&lt;bean id="vrsDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close"&gt;
-    &lt;property name="driverClassName" value="${jdbc.drvier}"/&gt;
-    &lt;property name="url" value="${jdbc.videodb.url}"/&gt;
-    &lt;property name="username" value="${jdbc.videodb.username}"/&gt;
-    &lt;property name="password" value="${jdbc.videodb.password}"/&gt;
-    &lt;property name="maxActive" value="${jdbc.videodb.maxActive}"/&gt;
-    &lt;property name="initialSize" value="${jdbc.videodb.initialSize}"/&gt;
-&lt;/bean&gt;
+<pre><code>$ curl -XGET 'localhost:9200/video/video_info/_search?pretty' -d @term_query.json
 </code></pre>
 
-<blockquote><p>主要属性参数说明：</p></blockquote>
+<p>term_query.json
+简单的字段查询：</p>
 
-<ul>
-<li>driverClassName: JDBC驱动的全限定类名，如mysql就是：com.mysql.jdbc.Driver；</li>
-<li>url：JDBC的url，如使用mysql的url：jdbc:mysql://10.11.132.193:3306/vrs；</li>
-<li>username, password: 连接该数据源的用户名和密码；</li>
-<li>initialSize：表示初始大小，即连接池启动时创建的连接数量；</li>
-<li>maxActive：表示同一时间可从池中分配的最大连接数，0表示无限制；</li>
-<li>maxIdle：池里不会被释放的最大连接数，0表示无限制；</li>
-<li>minIdle：在不创建新连接的情况下，池中保持空闲的最小连接数；</li>
-<li>maxWait：没有可用连接时，在抛出异常之前，池等待连接回收的最大时间；-1表示无线等待；</li>
-<li>validationQuery：验证连接的sql查询，至少返回一行；
-更多属性参考<a href="http://commons.apache.org/proper/commons-dbcp/configuration.html">wiki页</a></li>
-</ul>
-
-
-<blockquote><p>其它推荐的连接池有：</p></blockquote>
-
-<ul>
-<li><a href="http://www.mchange.com/projects/c3p0/">c3p0</a>: 适合多线程环境；</li>
-<li><a href="https://github.com/alibaba/druid">druid</a>：完善的监控功能；</li>
-</ul>
-
-
-<h3>2. 使用JdbcTemplate</h3>
-
-<p>使用JdbcTemplate类，在sql语句中，以?作为参数的占位符，传入的参数的顺序与sql语句中?的顺序必须是一一对应的。</p>
-
-<p>首先在xml配置文件里添加jdbcTemplate的bean，其参数<code>dataSource</code>引用之前定义的数据源：</p>
-
-<pre><code>&lt;bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate"&gt;
-    &lt;property name="dataSource" ref="vrsDataSource"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<p>然后，在dao类中引用JdbcTemplate类，并注入：</p>
-
-<pre><code>@Resource(name = "jdbcTemplate")
-JdbcTemplate jdbcTemplate;
-</code></pre>
-
-<p>查询
-返回基本类型：</p>
-
-<pre><code>String getUserById = "select name from students where id = ?";
-String userName = jdbcTemplate.queryForObject(getUserById, new Object[]{3}, String.class);
-</code></pre>
-
-<p>返回<code>Map&lt;String, Object&gt;</code>，key为列名，value为对应列的值，此时返回值只能有一行，否则报错：</p>
-
-<pre><code>String getStudentByNumber = "select * from students where number = ?";
-Map&lt;String, Object&gt; studentMap = jdbcTemplate.queryForMap(getStudentByNumber, 111);
-</code></pre>
-
-<p>返回<code>List&lt;Map&lt;String, Object&gt;&gt;</code>, 可以返回多列：</p>
-
-<pre><code>String getStudentsByCity = "select * from students where city = ?";
-List&lt;Map&lt;String, Object&gt;&gt; studentList = jdbcTemplate.queryForList(getStudentsByCity, "tianjin");
-</code></pre>
-
-<p>返回自定义class的对象，需要实现RowMapper接口，定义列名和属性的映射：
-首先实现RowMapper接口：</p>
-
-<pre><code>public class StudentRowMapper implements RowMapper&lt;Students&gt; {
-    @Override
-    public Students mapRow(ResultSet rs, int rowNum) throws SQLException {
-        Students students = new Students();
-        students.setId(rs.getInt("id"));
-        students.setName(rs.getString("name"));
-        students.setSex(rs.getString("sex"));
-        students.setNumber(rs.getInt("number"));
-        students.setEnable(rs.getInt("enable"));
-        students.setCity(rs.getString("city"));
-        return students;
+<pre><code>{
+    "query": {
+        "term": {
+            "tvName": "童年"
+        }
     }
 }
 </code></pre>
 
-<p>然后，使用query或者queryForObject查询多行或一行：</p>
+<p>添加boost属性：</p>
 
-<pre><code>String getStudentsByCity = "select * from students where city = ?";
-List&lt;Students&gt; studentsList = jdbcTemplate.query(getStudentsByCity, new StudentRowMapper(), "tianjin");
+<pre><code>{
+    "query": {
+        "term": {
+            "tvName": {
+                "value": "童年",
+                "boost": 10
+            }
+        }
+    }
+}
 </code></pre>
 
-<h3>2. 使用NamedParameterJdbcTemplate</h3>
+<h3>3. Java API</h3>
 
-<p>使用NamedParameterJdbcTemplate类，sql语句中的参数是以命名的变量来表示，传入参数时，只要参数名一致即可，索引位置不必一一对应。
-首先在xml配置文件里定义NamedParameterJdbcTemplate的bean：</p>
-
-<pre><code>&lt;bean id="namedParameterJdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate"&gt;
-    &lt;constructor-arg name="dataSource" ref="feedbackDataSource"/&gt;
-&lt;/bean&gt;
+<pre><code>public static void termQuery() {
+    String queryWord = "巨头";
+    QueryBuilder queryBuilder = QueryBuilders.termQuery(ConstantUtil.FIELD_TV_NAME, queryWord)
+            .boost(10);
+    SearchResponse response = searchRequestBuilder.setQuery(queryBuilder)
+            .setFrom(0).setSize(5).execute().actionGet();
+    printResult(response);
+}
 </code></pre>
 
-<p>然后将namedParameterJdbcTemplate bean注入到dao中，</p>
+<h3>4. 看看Java源码</h3>
 
-<pre><code>@Resource(name = "namedParameterJdbcTemplate")
-NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+<p>以下是term_query相关的java源码：</p>
+
+<pre><code>public static TermQueryBuilder termQuery(String name, String value) {
+    return new TermQueryBuilder(name, value);
+}
+
+public static TermQueryBuilder termQuery(String name, int value) {
+    return new TermQueryBuilder(name, value);
+}
+
+public TermQueryBuilder(String name, Object value) {
+    this.name = name;
+    this.value = value;
+}
+
+public TermQueryBuilder boost(float boost) {
+    this.boost = boost;
+    return this;
+}
 </code></pre>
 
-<p>定义sql，参数以(:变量名)形式给出即可，如：</p>
+<blockquote><p>从源码可以看到：termQuery方法内部都是调用TermQueryBuilder的构造函数，而TermQueryBuilder有很多重载的构造函数，最主要的就是上面的第三个函数，即第二个参数是Object类型，其它的构造函数都是调用该函数实现的。</p></blockquote>
 
-<pre><code>String getStudentByNumber = "select * from students where number = (:number) and city = (:city)";
-NamedParameterJdbcTemplate namedParameterJdbcTemplate = (NamedParameterJdbcTemplate) context.getBean("namedParameterJdbcTemplate");
-Map&lt;String, Object&gt; queryMap = new HashMap&lt;String, Object&gt;();
-queryMap.put("number", 333);
-queryMap.put("city", "tianjin");
-List&lt;Map&lt;String, Object&gt;&gt; mapList = namedParameterJdbcTemplate.queryForList(getStudentByNumber, queryMap);
-</code></pre>
-
-<blockquote><p>除了使用命名参数外，NamedParameterJdbcTemplate与JdbcTempate的主要用法都是一致的。</p></blockquote>
-
-<h3>3. 使用JdbcDaoSupport</h3>
-
-<p>JdbcDaoSupport是一个父类，如果有多个dao类，通过继承JdbcDaoSupport，可以更方便地获取jdbcTemplate。
-首先让dao类继承JdbcDaoSupport类：</p>
-
-<pre><code>public class InfoJdbcImpl extends JdbcDaoSupport implements VideoInfoDao {
-</code></pre>
-
-<p>然后在定义dao类的bean时，注入一个<code>jdbcTemplate</code>属性，或者直接注入一个<code>dataSource</code>属性（这两个属性来自于JdbcDaoSupport）：</p>
-
-<pre><code>&lt;bean id="infoJdbcImpl" class="com.sohu.tv.dao.impl.InfoJdbcImpl"&gt;
-    &lt;property name="dataSource" ref="feedbackDataSource"/&gt;
-&lt;/bean&gt;
-</code></pre>
-
-<p>然后通过getJdbcTemplate()获取jdbcTemplate，实现dao层的逻辑：</p>
-
-<pre><code>String getStudentByNumber = "select * from students where number = ?";
-Map&lt;String, Object&gt; studentMap = getJdbcTemplate().queryForMap(getStudentByNumber, 111);
-</code></pre>
-
-<blockquote><p><code>NamedParameterJdbcDaoSupport</code>与<code>JdbcDaoSupport</code>的用法类似。</p></blockquote>
-
-<h4>参考资料</h4>
+<h4>参考资料：</h4>
 
 <ul>
-<li><a href="http://www.amazon.cn/Spring%E5%AE%9E%E6%88%98-%E6%B2%83%E5%B0%94%E6%96%AF/dp/B00CY6UD2I/ref=sr_1_1?ie=UTF8&amp;qid=1394943496&amp;sr=8-1&amp;keywords=spring+in+action">Spring实战(第3版)</a></li>
-<li><a href="http://docs.spring.io/spring/docs/3.2.8.RELEASE/javadoc-api/">spring-javadoc-api</a></li>
+<li><a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-query.html">elasticsearch-guide</a></li>
 </ul>
 
 </div>
@@ -324,11 +239,13 @@ Map&lt;String, Object&gt; studentMap = getJdbcTemplate().queryForMap(getStudentB
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (3)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (4)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140323/elasticsearch-match-query/">elasticsearch查询api：match query</a></li>
 		
 		  <li><a href="/blog/20140322/spring-mybatis/">Spring持久化之MyBatis</a></li>
 		
@@ -347,8 +264,6 @@ Map&lt;String, Object&gt; studentMap = getJdbcTemplate().queryForMap(getStudentB
 		  <li><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></li>
 		
 		  <li><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></li>
-		
-		  <li><a href="/blog/20140216/xmemcached-usage-with-spring/">xmemcached主要用法及与Spring集成</a></li>
 		
   	</ul>
 </section>

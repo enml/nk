@@ -4,7 +4,7 @@
   <title><![CDATA[Category: elasticsearch | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/elasticsearch/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-22T20:24:45+08:00</updated>
+  <updated>2014-03-23T23:13:05+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,92 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[elasticsearch查询api：match query]]></title>
+    <link href="http://nkcoder.github.io/blog/20140323/elasticsearch-match-query/"/>
+    <updated>2014-03-23T22:55:03+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140323/elasticsearch-match-query</id>
+    <content type="html"><![CDATA[<h3>1. match query</h3>
+
+<ul>
+<li>与<strong>term query</strong>不同，<strong>match query</strong>的查询词是被分词处理的（analyzed），即首先分词，然后构造相应的查询，所以应该确保查询的分词器和索引的分词器是一致的；</li>
+<li>与<strong>terms query</strong>相似，提供的查询词之间默认是or的关系，可以通过<code>operator</code>属性指定；</li>
+<li><strong>match query</strong>有两种形式，一种是简单形式，一种是bool形式；</li>
+</ul>
+
+
+<h3>2. REST API</h3>
+
+<pre><code># curl -XGET 'localhost:9200/video/video_info/_search?pretty' -d @match_query.json
+</code></pre>
+
+<p>简单形式的<strong>match query</strong>：</p>
+
+<pre><code>{
+    "query": {
+        "match": {
+            "tvName": "决战"
+        }
+    }
+}
+</code></pre>
+
+<p>bool形式的<strong>match query</strong>：</p>
+
+<pre><code>{
+    "query": {
+        "match": {
+            "tvName": {
+                "query": "决战华岩寺",
+                "operator": "or",
+                "minimum_should_match": "2"
+            }
+        }
+    }
+}
+</code></pre>
+
+<blockquote><p>在REST API中，<code>tvName</code>表示要查询的目标字段，也可以是<code>_all</code>。bool形式的<strong>match query</strong>支持的属性有：</p></blockquote>
+
+<ul>
+<li><code>operator</code>: 指定构造查询时的布尔操作，可以是<code>and</code>、<code>or</code>，默认是<code>or</code>；</li>
+<li><code>analyzer</code>：指定查询分词器，默认为默认的分词器；</li>
+<li><code>minimum_should_match</code>: 最小匹配个数</li>
+</ul>
+
+
+<h3>3. Java API</h3>
+
+<p>以下为<strong>match query</strong>的Java API示例：</p>
+
+<pre><code>public static void matchQuery() {
+    String queryWord = "天津电视台";
+    QueryBuilder matchQuery = QueryBuilders.matchQuery(ConstantUtil.FIELD_TV_NAME, queryWord)
+            .analyzer("ik").operator(MatchQueryBuilder.Operator.OR).minimumShouldMatch("1");
+    SearchResponse response = searchRequestBuilder.setQuery(matchQuery)
+            .setFrom(0).setSize(5).execute().actionGet();
+    printResult(response);
+}
+</code></pre>
+
+<h3>4. 看看Java源码</h3>
+
+<pre><code>public static MatchQueryBuilder matchQuery(String name, Object text) {
+    return new MatchQueryBuilder(name, text).type(MatchQueryBuilder.Type.BOOLEAN);
+}
+</code></pre>
+
+<blockquote><p><strong>match query</strong>对应的是<code>matchQuery()</code>函数，内部先调用<code>MatchQueryBuilder</code>的构造函数，然后将类型设置为<em>Boolean</em>，即先分词，然后构造布尔查询；</p></blockquote>
+
+<h4>5. 参考：</h4>
+
+<ul>
+<li><a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-match-query.html">match query</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[elasticsearch查询api：terms query]]></title>

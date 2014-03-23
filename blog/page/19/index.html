@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140104/java-string-source/">String.java 源码学习</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140105/bash-for-loop-by-example/">Bash For循环用法示例</a></h1>
     
     
       <p class="meta">
@@ -126,272 +126,166 @@
   
 
 
-<time datetime="2014-01-04T00:27:12+08:00" pubdate data-updated="true">Jan 4<span>th</span>, 2014</time>
+<time datetime="2014-01-05T14:36:30+08:00" pubdate data-updated="true">Jan 5<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140104/java-string-source/#disqus_thread">Comments</a>
+         | <a href="/blog/20140105/bash-for-loop-by-example/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. 存储结构</h3>
+  <div class="entry-content"><blockquote><p>来源：<a href="http://www.cyberciti.biz/faq/bash-for-loop/">Bash For Loop Examples</a>  编译：lingguo</p></blockquote>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-</span></code></pre></td></tr></table></div></figure>
+<h4>1. for循环的第一种形式：</h4>
 
-
-<blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
-
-<h3>2. 构造函数</h3>
-
-<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
-
-<h4>2.1 第一类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash">    <span class="k">for </span>variable in 1 2 3 4 5
+    <span class="k">do</span>
+<span class="k">        </span><span class="nb">command</span>
+<span class="nb">    </span><span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
+<p>示例1：</p>
 
-<h4>2.2 第二类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuffer</span> <span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="kd">synchronized</span><span class="o">(</span><span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">buffer</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuilder</span> <span class="n">builder</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">builder</span><span class="o">.</span><span class="na">builder</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in 1 2 3 4 5
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。</p></blockquote>
+<p>连续的值，可以通过{start..end}缩写，如1 2 3 4 5可以表示为：{1..5}，如：
+示例2：</p>
 
-<h4>2.3 第三类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">,</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">charset</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">&quot;charset&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">charset</span><span class="o">,</span> <span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>i in <span class="o">{</span>1..5<span class="o">}</span>
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。</p></blockquote>
+<p>bash 4.0及以上，支持设置变量的自增的步数，语法是：{start..end..increment}, 如：
+示例3：</p>
 
-<h3>3. 常用函数</h3>
-
-<h4>3.1 第一类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isEmpty</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">char</span> <span class="nf">charAt</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">((</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">))</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash">    <span class="c">#!/bin/bash</span>
+    <span class="nb">echo</span> <span class="s2">&quot;Bash version ${BASH_VERSION}...&quot;</span>
+    <span class="k">for </span>i in <span class="o">{</span>0..10..2<span class="o">}</span>
+      <span class="k">do</span>
+<span class="k">         </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $i times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。</p></blockquote>
+<p>使用for遍历文件，语法为：</p>
 
-<h4>3.2 第二类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcBegin</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcEnd</span> <span class="o">&gt;</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&gt;</span> <span class="n">srcEnd</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span> <span class="o">-</span> <span class="n">srcBegin</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">dst</span><span class="o">,</span> <span class="n">dstBegin</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBytes</span><span class="o">(){</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash">    <span class="k">for </span>file in file1 file2 file3 file4
+    <span class="k">do</span>
+<span class="k">        </span>commands
+    <span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。</p></blockquote>
+<p>示例4：</p>
 
-<h4>3.3 第三类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">anObject</span> <span class="n">instanceOf</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="n">String</span> <span class="n">anotherString</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">anObject</span><span class="o">;</span>
-</span><span class='line'>      <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>          <span class="kt">char</span> <span class="n">v1</span><span class="o">[]</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
-</span><span class='line'>          <span class="kt">char</span> <span class="n">v2</span><span class="o">[]</span> <span class="o">=</span>  <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class='line'>          <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class='line'>          <span class="k">while</span> <span class="o">(</span><span class="n">n</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{}</span>
-</span><span class='line'>              <span class="k">if</span> <span class="o">(</span><span class="n">v1</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">v2</span><span class="o">[</span><span class="n">i</span><span class="o">])</span>
-</span><span class='line'>                  <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class='line'>              <span class="n">i</span><span class="o">++;</span>
-</span><span class='line'>          <span class="o">}</span>
-</span><span class='line'>          <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-</span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equalsIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">?</span> <span class="kc">true</span>
-</span><span class='line'>      <span class="o">:</span> <span class="o">(</span><span class="n">anotherString</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>      <span class="o">(</span><span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>      <span class="n">regionMatches</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">anotherString</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>file in /etc/*
+    <span class="k">do</span>
+<span class="k">        if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+        <span class="k">then</span>
+<span class="k">            </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+            <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+            <span class="nb">break</span>
+<span class="nb">       </span><span class="k">fi</span>
+<span class="k">    done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。</p></blockquote>
+<p>其中for file in /etc/* 等价于：</p>
 
-<h4>3.4 第四类</h4>
+<pre><code>for file in `ls /etc/*`    
+for file in $(ls /etc/*)
+</code></pre>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<h4>2. for循环的第二种形式：</h4>
+
+<p>与C语言for循环类似的语法：</p>
+
+<pre><code>for (( EXP1; EXP2; EXP3 ))
+do
+    commands
+done
+</code></pre>
+
+<p>示例5：</p>
+
+<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
+    <span class="k">for</span> <span class="o">((</span> <span class="nv">c</span><span class="o">=</span>1; c&lt;<span class="o">=</span>5; c++ <span class="o">))</span>
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;Welcome $c times&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
 
 
-<blockquote><p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p></blockquote>
+<p>当for的EXP1，EXP2，EXP3都为空时，即为无限循环：
+示例6：</p>
+
+<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
+    <span class="k">for</span> <span class="o">((</span> ; ; <span class="o">))</span>
+    <span class="k">do</span>
+<span class="k">       </span><span class="nb">echo</span> <span class="s2">&quot;infinite loops [ hit CTRL+C to stop]&quot;</span>
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
+<h4>3. for循环也支持break和continue关键字，与C语言一致</h4>
+
+<p>示例7：</p>
+
+<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
+    <span class="k">for </span>file in /etc/*
+    <span class="k">do</span>
+<span class="k">        if</span> <span class="o">[</span> <span class="s2">&quot;${file}&quot;</span> <span class="o">==</span> <span class="s2">&quot;/etc/resolv.conf&quot;</span> <span class="o">]</span>
+        <span class="k">then</span>
+<span class="k">            </span><span class="nv">countNameservers</span><span class="o">=</span><span class="k">$(</span>grep -c nameserver /etc/resolv.conf<span class="k">)</span>
+            <span class="nb">echo</span> <span class="s2">&quot;Total  ${countNameservers} nameservers defined in ${file}&quot;</span>
+            <span class="nb">break</span>
+<span class="nb">       </span><span class="k">fi</span>
+<span class="k">    done</span>
+    
+</code></pre></div>
+
+
+<p>示例8：</p>
+
+<div class="highlight"><pre><code class="bash"> <span class="c">#!/bin/bash</span>
+    <span class="nv">FILES</span><span class="o">=</span><span class="s2">&quot;$@&quot;</span>
+    <span class="k">for </span>f in <span class="nv">$FILES</span>
+    <span class="k">do</span>
+        <span class="c"># if .bak backup file exists, read next file</span>
+        <span class="k">if</span> <span class="o">[</span> -f <span class="k">${</span><span class="nv">f</span><span class="k">}</span>.bak <span class="o">]</span>
+        <span class="k">then</span>
+<span class="k">            </span><span class="nb">echo</span> <span class="s2">&quot;Skiping $f file...&quot;</span>
+            <span class="k">continue</span>  <span class="c"># read next file and skip cp command</span>
+        <span class="k">fi</span>
+        <span class="c"># we are hear means no backup file exists, just use cp command to copy file</span>
+        /bin/cp <span class="nv">$f</span> <span class="nv">$f</span>.bak
+    <span class="k">done</span>
+    
+</code></pre></div>
+
+
+
 </div>
   
   
@@ -400,6 +294,8 @@
     </article>
   
   <ul class="pager">
+    
+    <li class="previous"><a href="/blog/page/20/">&larr; Older</a></li>
     
     <li><a href="/blog/archives">Blog Archives</a></li>
     
@@ -411,11 +307,13 @@
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (3)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (4)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140323/elasticsearch-match-query/">elasticsearch查询api：match query</a></li>
 		
 		  <li><a href="/blog/20140322/spring-mybatis/">Spring持久化之MyBatis</a></li>
 		
@@ -434,8 +332,6 @@
 		  <li><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></li>
 		
 		  <li><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></li>
-		
-		  <li><a href="/blog/20140216/xmemcached-usage-with-spring/">xmemcached主要用法及与Spring集成</a></li>
 		
   	</ul>
 </section>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: memcached | You Sharp]]></title>
   <link href="http://nkcoder.github.io/blog/categories/memcached/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-22T20:24:45+08:00</updated>
+  <updated>2014-03-23T23:13:05+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -559,8 +559,7 @@ END
 <li><a href="https://code.google.com/p/memcached/wiki/NewStart">memcached wiki</a></li>
 <li><a href="http://www.zrwm.com/?p=642">memcached命令行操作</a></li>
 <li><a href="http://blog.csdn.net/wanghai__/article/details/8539435">memcached命令行参数说明</a></li>
-<li>[memcached详解](<a href="http://freeloda.blog.51cto.com/2033581/1289806%EF%BC%89">http://freeloda.blog.51cto.com/2033581/1289806%EF%BC%89</a></li>
-<li>[]</li>
+<li><a href="http://freeloda.blog.51cto.com/2033581/1289806">memcached详解</a></li>
 </ul>
 
 ]]></content>
