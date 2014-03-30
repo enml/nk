@@ -110,7 +110,7 @@
       
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140309/spring-di-annotation/">Spring依赖注入之注解注入</a></h1>
+      <h1 class="entry-title"><a href="/blog/20140310/spring-di-java/">Spring依赖注入之Java注解</a></h1>
     
     
       <p class="meta">
@@ -126,65 +126,44 @@
   
 
 
-<time datetime="2014-03-09T18:19:11+08:00" pubdate data-updated="true">Mar 9<span>th</span>, 2014</time>
+<time datetime="2014-03-10T23:29:44+08:00" pubdate data-updated="true">Mar 10<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140309/spring-di-annotation/#disqus_thread">Comments</a>
+         | <a href="/blog/20140310/spring-di-java/#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><h3>1. bean的自动装配和自动检测的区别</h3>
+  <div class="entry-content"><blockquote><p>基于Java的注解，是在类级别上定义beans，在方法级别上定义bean。和自动注解一样，可以减少xml的配置。</p></blockquote>
 
-<p>启用注解装配，在xml配置文件里添加：</p>
+<h3>1. xml配置</h3>
 
-<pre><code>&lt;context:annotation-config/&gt;
+<p>在xml配置文件中添加自动扫描的配置：</p>
+
+<pre><code>&lt;context:component-scan base-package="org.yousharp"/&gt;
 </code></pre>
 
-<p>启用自动扫描注解，在xml配置文件里添加：</p>
+<blockquote><p>该配置不仅扫描构造型注解(@Controller, @Service, @Repository, @Component)，也会扫描@Configuration注解。</p></blockquote>
 
-<pre><code>&lt;context:component-scan base-package="org.yousharp.base"/&gt;
-</code></pre>
+<h3>2. 定义dao类和service类</h3>
 
-<blockquote><p>二者的区别：
-自动装配表示通过@Autowired, @Inject, @Resource等实现对属性或构造函数的自动注入；仍然需要在配置文件里定义bean，只是通过自动装配省去了<code>property</code>和<code>constructor-arg</code>的配置。
-自动检测是扫描特定的注解（包括：@Component, @Controller, @Service, @Repository)，将注解过的类自动定义为bean，自动检测是自动装配的超集，通过自动检测，可以省去在xml配置文件里定义<code>bean</code>了。</p></blockquote>
+<p>dao类是service类的一个属性，是需要注入的对象。</p>
 
-<h3>2. 通过自动装配和注解实现注入</h3>
+<pre><code>public class VideoService {
+    SaveVideoInfoDao saveVideoInfoDao;
 
-<p>在xml配置文件里启动注解装配：</p>
+    public VideoService(){}
 
-<pre><code>&lt;context:annotation-config/&gt;
-</code></pre>
+    public VideoService(SaveVideoInfoDao saveVideoInfoDao) {
+        this.saveVideoInfoDao = saveVideoInfoDao;
+    }
 
-<p>定义bean：</p>
-
-<pre><code>&lt;bean id="saveVideoInfoDao" class="org.dao.SaveVideoInfoDao"/&gt;
-</code></pre>
-
-<p>然后在需要注入的属性上或者其setter方法上，或者构造函数上，添加@Autowired, @Inject, @Resource等注解实现自动注入：</p>
-
-<pre><code>//@Autowired
-//@Inject
-@Resource
-public void setSaveVideoInfoDao(SaveVideoInfoDao videoInfoDao) {
-    this.saveVideoInfoDao = videoInfoDao;
+    public void saveVideoInfo(String info) {
+        saveVideoInfoDao.printMesg(info);
+    }
 }
-</code></pre>
 
-<blockquote><p>@Autowired, @Inject, @Resource的区别：@Autowired是Spring 3.0的注解，是通过byType形式实现注解，可以通过@Qualifier根据bean的id进行限定；使用@Autowired注解即引入了对Spring的依赖。@Inject是JSR 330的注解，使用该注解需要导入包javax.inject，@Named(value=&ldquo;&rdquo;)可以根据bean的id进行限定；@Resource是JSR 250的注解，可以通过value限定bean的id，如@Resource(value=&ldquo;&rdquo;);</p></blockquote>
-
-<h3>3. 使用自动检测注解实现注入</h3>
-
-<p>在xml配置文件里增加自动检测的配置：</p>
-
-<pre><code>&lt;context:component-scan base-package="org.yousharp.base"/&gt;
-</code></pre>
-
-<p>将需要被自动检测而注册为bean的类使用对应的构造型注解：</p>
-
-<pre><code>@Repository
 public class SaveVideoInfoDao {
 
     public void printMesg(String message) {
@@ -193,32 +172,62 @@ public class SaveVideoInfoDao {
 }
 </code></pre>
 
-<p>使用注解对依赖的属性进行输入：</p>
+<blockquote><p>dao类和service类就是两个很普通的java类，没有任何注解依附。</p></blockquote>
 
-<pre><code>@Service
-public class VideoService {
-    @Resource
-    SaveVideoInfoDao saveVideoInfoDao;
+<h3>3. 定义一个配置类</h3>
 
-    public void saveVideoInfo(String info) {
-        saveVideoInfoDao.printMesg(info);
+<p>单独定义一个配置类（在自动扫描包下），在类上使用@Configuration注解，在方法上使用@Bean注解：</p>
+
+<pre><code>@Configuration
+public class AppConfig {
+
+    @Bean
+    public SaveVideoInfoDao saveVideoInfoDao() {
+        return new SaveVideoInfoDao();
+    }
+
+    @Bean
+    public VideoService videoService() {
+        VideoService videoService = new VideoService(saveVideoInfoDao());
+        return videoService;
     }
 }
 </code></pre>
 
-<blockquote><p>@Component是通用的注解，@Controller表示将该类定义为Spring MVC的控制器，@Service定义服务层，@Repository定义数据仓库；这些构造型注解默认以无限定类名作为bean的id，也可以显式指定id名称，如@Service(&ldquo;videoInfoService&rdquo;)或者@Service(name=&ldquo;videoInfoService&rdquo;);</p></blockquote>
+<blockquote><p>@Configuration注解等价于xml配置中的<code>beans</code>，该注解告诉Spring该类中包含一个或多个bean的定义；@Bean注解等价于xml配置中的<code>bean</code>，将方法返回的对象定义为bean，方法名为bean的id；上面第一个bean的定义等价于xml配置：</p></blockquote>
 
-<h3>4. 自动检测注解的过滤</h3>
-
-<p>可以为扫描行为定义过滤器，如<code>context:include-filter</code>, <code>context:exclude-filter</code></p>
-
-<pre><code>&lt;context:component-scan base-package="org.yousharp"&gt;
-    &lt;context:include-filter type="assignable" expression="org.yousharp.dao.SaveVideoInfoDao"/&gt;
-    &lt;context:exclude-filter type="annotation" expression="org.springframework.stereotype.Component"/&gt;
-&lt;/context:component-scan&gt;
+<pre><code>&lt;bean id="saveInfoDao" class="org.yousharp.AppConfig"/&gt;
 </code></pre>
 
-<blockquote><p><code>context:include-filter</code>表示需要扫描并注解的类，<code>context:exclude-filter</code>表示扫描时需要排除的包；<code>type</code>一种有5中，<code>assignable</code>表示继承自<code>expression</code>所指定的包，<code>annotation</code>表示所有expression所指定的注解。</p></blockquote>
+<p>第二个bean的定义通过构造函数实现依赖注入，其含义等价于xml配置：</p>
+
+<pre><code>&lt;bean id="videoService" class="org.yousharp.AppConfig"&gt;
+    &lt;constructor-arg name="videoService" ref="saveVideoInfoDao"&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<p>这里是通过构造函数实现注入，当然也可以通过setter方法实现注入。在VideoInfoService中去掉带参数的构造函数，同时对属性saveVideoInfoDao添加setter方法，修改AppConfig类中的第二个bean为：</p>
+
+<pre><code>@Bean
+public VideoService videoService() {
+    VideoService videoService = new VideoService();
+    videoService.setSaveVideoInfoDao(saveVideoInfoDao());
+    return videoService;
+}
+</code></pre>
+
+<h3>4. Controller中引用</h3>
+
+<p>Controller里和使用xml配置bean和自动注解一样，通过bean的id获取对bean的引用。这里VideoService的bean的id为videoService。</p>
+
+<pre><code>ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+public void execute() {
+    VideoService videoService = (VideoService) context.getBean("videoService");
+    String videoInfo = "vrs video info";
+    videoService.saveVideoInfo(videoInfo);
+}
+</code></pre>
 
 <h4>参考资料</h4>
 
@@ -247,11 +256,13 @@ public class VideoService {
   
     <section>
   <h4>Categories</h4>
-    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (4)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (6)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/bash/'>Bash (1)</a></li><li><a href='/blog/categories/elasticsearch/'>elasticsearch (4)</a></li><li><a href='/blog/categories/java/'>Java (1)</a></li><li><a href='/blog/categories/linux/'>Linux (1)</a></li><li><a href='/blog/categories/memcached/'>memcached (3)</a></li><li><a href='/blog/categories/mysql/'>MySql (2)</a></li><li><a href='/blog/categories/spring/'>Spring (7)</a></li><li><a href='/blog/categories/gong-ju/'>工具 (1)</a></li><li><a href='/blog/categories/ji-zhu-zhi-wai/'>技术之外 (1)</a></li></ul>
 </section>
 <section>
 	<h4> Recent Posts </h4>
   	<ul>
+		
+		  <li><a href="/blog/20140330/spring-hibernate-example/">Spring持久化之Hibernate</a></li>
 		
 		  <li><a href="/blog/20140323/elasticsearch-match-query/">elasticsearch查询api：match query</a></li>
 		
@@ -270,8 +281,6 @@ public class VideoService {
 		  <li><a href="/blog/20140309/spring-di-annotation/">Spring依赖注入之注解注入</a></li>
 		
 		  <li><a href="/blog/20140308/spring-di-xml/">Spring依赖注入之XML配置</a></li>
-		
-		  <li><a href="/blog/20140217/elasticsearch-install-config/">分布式搜索引擎ElasticSearch安装与配置</a></li>
 		
   	</ul>
 </section>

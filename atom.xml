@@ -4,7 +4,7 @@
   <title><![CDATA[You Sharp]]></title>
   <link href="http://nkcoder.github.io/atom.xml" rel="self"/>
   <link href="http://nkcoder.github.io/"/>
-  <updated>2014-03-23T23:13:05+08:00</updated>
+  <updated>2014-03-30T18:40:34+08:00</updated>
   <id>http://nkcoder.github.io/</id>
   <author>
     <name><![CDATA[lingguo]]></name>
@@ -12,6 +12,205 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Spring持久化之Hibernate]]></title>
+    <link href="http://nkcoder.github.io/blog/20140330/spring-hibernate-example/"/>
+    <updated>2014-03-30T18:37:27+08:00</updated>
+    <id>http://nkcoder.github.io/blog/20140330/spring-hibernate-example</id>
+    <content type="html"><![CDATA[<p>本文简要介绍Spring通过Hibernate实现持久化需要的基本配置，分别通过注解和xml配置来实现。</p>
+
+<h3>1. 通过注解实现</h3>
+
+<h4>1.1 添加pom依赖</h4>
+
+<p>在pom的xml里添加<em>Hibernate</em>相关的依赖，如：</p>
+
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+    &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+    &lt;version&gt;3.6.10.Final&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;javax.persistence&lt;/groupId&gt;
+    &lt;artifactId&gt;persistence-api&lt;/artifactId&gt;
+    &lt;version&gt;${javax.persist}&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;javassist&lt;/groupId&gt;
+    &lt;artifactId&gt;javassist&lt;/artifactId&gt;
+    &lt;version&gt;3.12.1.GA&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+
+<h4>1.2 实体类的注解定义</h4>
+
+<p>先定义一个实体类StudentEntity.java，映射到数据库中的表students：</p>
+
+<pre><code>@Entity
+@Table(name = "students")
+public class StudentEntity {
+    @Id
+    @Column(name = "id", nullable = false)
+    @GeneratedValue
+    private int id;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "sex", nullable = true)
+    private String sex;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public StudentEntity() {}
+
+    public StudentEntity(String name, String sex) {
+        this.name = name;
+        this.sex = sex;
+    }
+}
+</code></pre>
+
+<blockquote><p><strong>@Entity</strong>表示这是一个实体类，<strong>@Table(name = &ldquo;students&rdquo;)</strong>表示映射到数据源指定的数据库中的一个名为<em>students</em>的表；<strong>@Id</strong>表示该字段是主键，<strong>@Column(name = &ldquo;id&rdquo;, nullable = false)</strong>表示该属性映射到表中名为<em>id</em>的属性，且不能为空；<strong>@GeneratedValue</strong>表示该字段是自增的；这样定义之后，该实体类便与表<em>students</em>完成了一一对应。</p></blockquote>
+
+<h4>1.3 定义dao实现类</h4>
+
+<p>我们的dao实现类为HibernateDaoImpl.java，依赖一个属性，即<em>SessionFactory</em>的实例，我们通过注解实现注入：</p>
+
+<pre><code>@Repository (value = "hibernateDaoImpl")
+public class HibernateDaoImpl implements StudentDao {
+
+    @Resource(name = "sessionFactory")
+    SessionFactory sessionFactory;
+
+    @Override
+    @Transactional
+    public StudentEntity getUserNameById(int id) {
+        StudentEntity studentEntity = (StudentEntity) sessionFactory.getCurrentSession().get(StudentEntity.class, id);
+        return studentEntity;
+    }
+
+    @Override
+    @Transactional
+    public void saveStudents(StudentEntity studentEntity) {
+        sessionFactory.getCurrentSession().persist(studentEntity);
+    }
+}
+</code></pre>
+
+<blockquote><p><strong>Repository</strong>注解表示该类会被Spring的注解扫描器自动定义为bean，bean的名字为<em>hibernateDaoImpl</em>，同时实现异常转换，将Hibernate的检查型异常，转换为Spring的非检查型异常，这是通过在Spring配置文件里配置<strong>PersistenceExceptionTranslationPostProcessor</strong>的ban实现的。通过<em>sessionFactory</em>的<em>getCurrentSession</em>方法获取当前的<em>session</em>，实现对数据库的持久化操作。Hibernate还要求这些操作是与事务绑定的，因此需要在dao层或者service层添加事务的注解，即<em>@Transactional</em>。</p></blockquote>
+
+<h4>1.4 添加Spring配置</h4>
+
+<p>在Spring配置文件applicationContext.xml主要是添加<strong>SessionFactory</strong>的配置，以及配置事务，与<em>Hibernate</em>相关的配置如下：</p>
+
+<pre><code>&lt;bean name="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean"&gt;
+    &lt;property name="dataSource" ref="feedbackDataSource"/&gt;
+    &lt;property name="packagesToScan" value="com.sohu.tv.bean"/&gt;
+    &lt;property name="hibernateProperties"&gt;
+        &lt;props&gt;
+            &lt;prop key="hibernate.dialect"&gt;org.hibernate.dialect.MySQL5Dialect&lt;/prop&gt;
+            &lt;prop key="hibernate.show_sql"&gt;true&lt;/prop&gt;
+        &lt;/props&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+
+&lt;bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/&gt;
+
+&lt;bean id="tx" class="org.springframework.orm.hibernate3.HibernateTransactionManager"&gt;
+    &lt;property name="sessionFactory" ref="sessionFactory"/&gt;
+&lt;/bean&gt;
+
+&lt;tx:annotation-driven transaction-manager="tx"/&gt;
+</code></pre>
+
+<blockquote><p>在定义<em>sessionFactory</em>的bean时，因为是基于注解的，所以引用的class为：<strong>AnnotationSessionFactoryBean</strong>；属性<em>dataSource</em>即配置的数据源；属性<em>packagesToScan</em>即要扫描的包名，在这个包下的所有类，如果使用了<em>@Entity</em>、<em>@Column</em>等注解，都会被扫描器处理；<em>@hibernateProperties</em>属性定义了Hibernate相关的属性，如使用的dialect，是否显示输出sql语句等。<strong>PersistenceExceptionTranslationPostProcessor</strong>定义的bean是进行异常转换的；<em>HibernateTransactionManager</em>用于定义事务；<em>&lt;tx:annotation-driven /></em>类似于<em>&lt;context:component-scan /></em>，扫描事务类型的注解。</p></blockquote>
+
+<h3>2. 通过xml映射文件实现</h3>
+
+<p>通过xml映射文件与通过注解实现的区别就在于实体类与数据库之间的映射的定义，所以其它相同的部分就不重复了。</p>
+
+<h4>2.1 定义映射文件</h4>
+
+<p>这个映射文件定义实体类与数据库的表之间的映射，即属性与字段的映射，如hibernate.xml文件内容可以如下定义：</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"&gt;
+&lt;hibernate-mapping&gt;
+    &lt;class name="com.sohu.tv.bean.Students" table="students"&gt;
+
+        &lt;id name="id" type="int"&gt;
+            &lt;column name="id" /&gt;
+            &lt;generator class="identity" /&gt;
+        &lt;/id&gt;
+        &lt;property name="name" type="string"&gt;
+            &lt;column name="name" length="255" not-null="true" /&gt;
+        &lt;/property&gt;
+        &lt;property name="sex" type="string"&gt;
+            &lt;column name="sex" not-null="false" /&gt;
+        &lt;/property&gt;
+    &lt;/class&gt;
+&lt;/hibernate-mapping&gt;
+</code></pre>
+
+<h4>2.2 修改Spring配置文件</h4>
+
+<p>需要修改的是<em>sessionFactory</em>的bean的定义，如：</p>
+
+<pre><code>&lt;bean name="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean"&gt;
+    &lt;property name="dataSource" ref="feedbackDataSource"/&gt;
+    &lt;property name="mappingLocations"&gt;
+        &lt;list&gt;
+            &lt;value&gt;classpath*:hibernate.xml&lt;/value&gt;
+        &lt;/list&gt;
+    &lt;/property&gt;
+    &lt;property name="hibernateProperties"&gt;
+        &lt;props&gt;
+            &lt;prop key="hibernate.dialect"&gt;org.hibernate.dialect.MySQL5Dialect&lt;/prop&gt;
+            &lt;prop key="hibernate.show_sql"&gt;true&lt;/prop&gt;
+        &lt;/props&gt;
+    &lt;/property&gt;
+&lt;/bean&gt;
+</code></pre>
+
+<blockquote><p>将<strong>AnnotationSessionFactoryBean</strong>修改为<strong>LocalSessionFactoryBean</strong>，同时，需要将属性<em>packagesToScan</em>修改为<em>mappingLocations</em>，即xml映射文件的位置。</p></blockquote>
+
+<h4>参考：</h4>
+
+<ul>
+<li><a href="http://book.douban.com/subject/24714203/">Spring 实战</a></li>
+<li><a href="http://www.mkyong.com/struts/struts-spring-hibernate-integration-example/">Struts + Spring + Hibernate Integration Example</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[elasticsearch查询api：match query]]></title>
@@ -3043,271 +3242,6 @@ done
 
 
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[String.java 源码学习]]></title>
-    <link href="http://nkcoder.github.io/blog/20140104/java-string-source/"/>
-    <updated>2014-01-04T00:27:12+08:00</updated>
-    <id>http://nkcoder.github.io/blog/20140104/java-string-source</id>
-    <content type="html"><![CDATA[<h3>1. 存储结构</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">private</span> <span class="kd">final</span> <span class="kt">char</span> <span class="n">value</span><span class="o">[];</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：String的底层是通过字符数组实现的，而且是常量，所以我们不能修改String类型的变量的值。</p></blockquote>
-
-<h3>2. 构造函数</h3>
-
-<blockquote><p>String的构造函数有很多：不带参数，参数可以为String, char[], byte[], StringBuffer, StringBuilder等。</p></blockquote>
-
-<h4>2.1 第一类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">String</span> <span class="n">original</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">hash</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="na">hash</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：因为String是常量，不能被修改，因此这两个构造函数，如无必要一般不用。</p></blockquote>
-
-<h4>2.2 第二类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">char</span> <span class="n">value</span><span class="o">[])</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuffer</span> <span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="kd">synchronized</span><span class="o">(</span><span class="n">buffer</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">buffer</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">buffer</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="n">StringBuilder</span> <span class="n">builder</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">builder</span><span class="o">.</span><span class="na">getValue</span><span class="o">(),</span> <span class="n">builder</span><span class="o">.</span><span class="na">builder</span><span class="o">.</span><span class="na">length</span><span class="o">());</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：char[]，StringBuffer，StringBuilder的内在存储结构都是char[]，所以这几个构造函数都是通过Arrays的copyOf函数执行复制操作，Arrays.copyOf函数是通过System.arraycopy实现的，这个函数在看到Arrays的源码时再解释。</p></blockquote>
-
-<h4>2.3 第三类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[])</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">bytes</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="nf">String</span><span class="o">(</span><span class="kt">byte</span> <span class="n">bytes</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">offset</span><span class="o">,</span> <span class="kt">int</span> <span class="n">length</span><span class="o">,</span> <span class="n">Charset</span> <span class="n">charset</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">charset</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">NullPointerException</span><span class="o">(</span><span class="s">&quot;charset&quot;</span><span class="o">);</span>
-</span><span class='line'>  <span class="n">checkBounds</span><span class="o">(</span><span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'>  <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">decode</span><span class="o">(</span><span class="n">charset</span><span class="o">,</span> <span class="n">bytes</span><span class="o">,</span> <span class="n">offset</span><span class="o">,</span> <span class="n">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：使用byte[]时，需要解码，如果没有指定字符编码，会使用系统默认的编码。</p></blockquote>
-
-<h3>3. 常用函数</h3>
-
-<h4>3.1 第一类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">length</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isEmpty</span><span class="o">()</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">char</span> <span class="nf">charAt</span><span class="o">(</span><span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">((</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">||</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">))</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">value</span><span class="o">[</span><span class="n">index</span><span class="o">];</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：length在String，StringBuilder，StringBuffer里面都是函数length()，在char[]是成员变量。</p></blockquote>
-
-<h4>3.2 第二类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">getChars</span><span class="o">(</span><span class="kt">int</span> <span class="n">srcBegin</span><span class="o">,</span> <span class="kt">int</span> <span class="n">srcEnd</span><span class="o">,</span> <span class="kt">char</span> <span class="n">dst</span><span class="o">[],</span> <span class="kt">int</span> <span class="n">dstBegin</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcBegin</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcEnd</span> <span class="o">&gt;</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">srcBegin</span> <span class="o">&gt;</span> <span class="n">srcEnd</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">StringIndexOutOfBoundsException</span><span class="o">(</span><span class="n">srcEnd</span> <span class="o">-</span> <span class="n">srcBegin</span><span class="o">);</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="n">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">dst</span><span class="o">,</span> <span class="n">dstBegin</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">getBytes</span><span class="o">(){</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">StringCoding</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：getChars就是在字符级别进行复制，getBytes需要指定字符集解码。</p></blockquote>
-
-<h4>3.3 第三类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equals</span><span class="o">(</span><span class="n">Object</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anObject</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">if</span> <span class="o">(</span><span class="n">anObject</span> <span class="n">instanceOf</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>      <span class="n">String</span> <span class="n">anotherString</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">anObject</span><span class="o">;</span>
-</span><span class='line'>      <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
-</span><span class='line'>      <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>          <span class="kt">char</span> <span class="n">v1</span><span class="o">[]</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
-</span><span class='line'>          <span class="kt">char</span> <span class="n">v2</span><span class="o">[]</span> <span class="o">=</span>  <span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
-</span><span class='line'>          <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
-</span><span class='line'>          <span class="k">while</span> <span class="o">(</span><span class="n">n</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{}</span>
-</span><span class='line'>              <span class="k">if</span> <span class="o">(</span><span class="n">v1</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">!=</span> <span class="n">v2</span><span class="o">[</span><span class="n">i</span><span class="o">])</span>
-</span><span class='line'>                  <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class='line'>              <span class="n">i</span><span class="o">++;</span>
-</span><span class='line'>          <span class="o">}</span>
-</span><span class='line'>          <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
-</span><span class='line'>      <span class="o">}</span>
-</span><span class='line'>  <span class="o">}</span>
-</span><span class='line'>  <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">equalsIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="o">(</span><span class="k">this</span> <span class="o">==</span> <span class="n">anotherString</span><span class="o">)</span> <span class="o">?</span> <span class="kc">true</span>
-</span><span class='line'>      <span class="o">:</span> <span class="o">(</span><span class="n">anotherString</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>      <span class="o">(</span><span class="n">anotherString</span><span class="o">.</span><span class="na">value</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">)</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>      <span class="n">regionMatches</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">anotherString</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">value</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：字符串的比较，都是针对String类型的，一个是大小写敏感，一个忽略大小写，内部实现差不多的。</p></blockquote>
-
-<h4>3.4 第四类</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="nf">compareToIgnoreCase</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">return</span> <span class="n">CASE_INSENSITIVE_ORDER</span><span class="o">.</span><span class="na">compare</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">str</span><span class="o">);</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<blockquote><p>备注：CASE_INSENSITIVE_ORDER是内部静态类的一个实例，所以直接调用的效果是一样的：String.CASE_INSENSITIVE_ORDER.compare(str1, str2);</p></blockquote>
 ]]></content>
   </entry>
   

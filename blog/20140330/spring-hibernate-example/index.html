@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>You Sharp</title>
+  <title>Spring持久化之Hibernate - You Sharp</title>
   <meta name="author" content="lingguo">
 
   
-  <meta name="description" content="blog about algorithm, Java Web, Linux, Python, Open Source...">
+  <meta name="description" content="简要介绍Spring通过Hibernate实现持久化的基本配置">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://nkcoder.github.io">
+  <link rel="canonical" href="http://nkcoder.github.io/blog/20140330/spring-hibernate-example">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/bootstrap/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/stylesheets/bootstrap/responsive.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -102,15 +102,13 @@
 </nav>
   <div class="container">
     <div class="row-fluid">
-      <div class="span9">
-  
-  
-  
-    <article>
       
+<article class="hentry span9" role="article">
+
+  
   <header class="page-header">
     
-      <h1 class="entry-title"><a href="/blog/20140330/spring-hibernate-example/">Spring持久化之Hibernate</a></h1>
+      <h1 class="entry-title">Spring持久化之Hibernate</h1>
     
     
       <p class="meta">
@@ -128,14 +126,14 @@
 
 <time datetime="2014-03-30T18:37:27+08:00" pubdate data-updated="true">Mar 30<span>th</span>, 2014</time>
         
-         | <a href="/blog/20140330/spring-hibernate-example/#disqus_thread">Comments</a>
+         | <a href="#disqus_thread">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>本文简要介绍Spring通过Hibernate实现持久化需要的基本配置，分别通过注解和xml配置来实现。</p>
+<div class="entry-content"><p>本文简要介绍Spring通过Hibernate实现持久化需要的基本配置，分别通过注解和xml配置来实现。</p>
 
 <h3>1. 通过注解实现</h3>
 
@@ -327,20 +325,69 @@ public class HibernateDaoImpl implements StudentDao {
 </ul>
 
 </div>
+
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">lingguo</span></span>
+
+      
+
+
+
+
+
+
+
+
   
 
 
-    </article>
+<time datetime="2014-03-30T18:37:27+08:00" pubdate data-updated="true">Mar 30<span>th</span>, 2014</time>
+      
+
+<span class="categories">
   
-  <ul class="pager">
+    <a class='category' href='/blog/categories/spring/'>Spring</a>
+  
+</span>
+
+
+    </p>
     
-    <li class="previous"><a href="/blog/page/2/">&larr; Older</a></li>
-    
-    <li><a href="/blog/archives">Blog Archives</a></li>
-    
-  </ul>
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://nkcoder.github.io/blog/20140330/spring-hibernate-example/" data-via="" data-counturl="http://nkcoder.github.io/blog/20140330/spring-hibernate-example/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
 </div>
+
+    
+    
+    <section>
+      <h1>Comments</h1>
+      <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+    </section>
+    
+    <ul class="pager">
+      
+      <li class="previous"><a class="basic-alignment left"
+        href="/blog/20140323/elasticsearch-match-query/" title="Previous Post:
+        elasticsearch查询api：match query">&laquo; elasticsearch查询api：match query</a></li>
+      
+      <li><a href="/blog/archives">Blog Archives</a></li>
+      
+    </ul>
+  </footer>
+</article>
+
 <aside class="sidebar-nav span3">
   
     <section>
@@ -381,6 +428,7 @@ public class HibernateDaoImpl implements StudentDao {
   
 </aside>
 
+
     </div>
   </div>
   <footer role="contentinfo" class="page-footer"><hr>
@@ -396,7 +444,10 @@ public class HibernateDaoImpl implements StudentDao {
       var disqus_shortname = 'nkcoder';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://nkcoder.github.io/blog/20140330/spring-hibernate-example/';
+        var disqus_url = 'http://nkcoder.github.io/blog/20140330/spring-hibernate-example/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
